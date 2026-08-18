@@ -1,0 +1,183 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+.dashboard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-light);
+}
+
+.dash-nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.dash-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.dash-link:hover, .dash-link.active {
+  color: var(--text-primary);
+}
+
+.workspace {
+  padding: 3rem 0 5rem;
+}
+
+.workspace-header {
+  margin-bottom: 3rem;
+}
+
+.workspace-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.workspace-header p {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}
+
+/* Verification Tool */
+.verify-tool-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  margin-bottom: 4rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.verify-tool-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.verify-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.verify-tab {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verify-tab:hover {
+  border-color: rgba(183, 216, 75, 0.5);
+  background: rgba(255,255,255,0.02);
+}
+
+.verify-tab.active {
+  border-color: var(--accent-lime);
+  background: rgba(183, 216, 75, 0.05);
+}
+
+.verify-tab .tab-icon {
+  font-size: 1.75rem;
+}
+
+.verify-tab .tab-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.verify-tab .tab-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.verify-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.verify-input-group {
+  margin-bottom: 1.5rem;
+}
+
+.verify-input {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.125rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.verify-input:focus {
+  outline: none;
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 0 3px rgba(183, 216, 75, 0.15);
+}
+
+.verify-btn {
+  width: 100%;
+  padding: 1.25rem;
+  font-size: 1.125rem;
+}
+
+.verify-status-msg {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(183, 216, 75, 0.1);
+  border: 1px solid rgba(183, 216, 75, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+/* History Section */
+.history-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.empty-history {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .verify-tabs {
+    grid-template-columns: 1fr;
+  }
+  .dash-nav-links {
+    display: none; /* simple responsive fix for now */
+  }
+  .workspace-header h1 {
+    font-size: 1.5rem;
+  }
+}

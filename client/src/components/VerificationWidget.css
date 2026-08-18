@@ -1,0 +1,103 @@
+.widget-container {
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.widget-tabs {
+  display: flex;
+  background-color: var(--bg-dark);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.widget-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.widget-tab.active {
+  background-color: var(--bg-light);
+  color: var(--accent-lime);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.widget-form {
+  padding: 0 1rem 1rem;
+}
+
+.widget-input-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.widget-input {
+  width: 100%;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 1.125rem;
+  transition: all 0.2s;
+}
+
+.widget-input:focus {
+  outline: none;
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 0 2px rgba(183, 216, 75, 0.15);
+}
+
+.widget-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.125rem;
+}
+
+.widget-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: rgba(183, 216, 75, 0.1);
+  border: 1px solid rgba(183, 216, 75, 0.2);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  animation: fadeIn 0.3s ease;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

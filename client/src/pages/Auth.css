@@ -1,0 +1,148 @@
+.auth-split-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-dark);
+}
+
+.auth-visual-side {
+  flex: 1;
+  display: none; /* Hidden on mobile */
+  background: linear-gradient(145deg, var(--bg-dark) 0%, #151a13 100%);
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  border-right: 1px solid var(--border-color);
+}
+
+@media (min-width: 900px) {
+  .auth-visual-side {
+    display: flex;
+  }
+}
+
+.auth-visual-content {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+}
+
+.auth-visual-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.auth-visual-title span {
+  color: var(--accent-lime);
+}
+
+.auth-visual-subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+.auth-mock-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  margin-bottom: 3rem;
+  backdrop-filter: blur(10px);
+}
+
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .auth-form-side {
+    padding: 4rem 10%;
+  }
+}
+
+.auth-form-header {
+  margin-bottom: 2.5rem;
+}
+
+.auth-form-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-form-header p {
+  color: var(--text-secondary);
+}
+
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2.5rem;
+}
+
+.auth-tab {
+  flex: 1;
+  text-align: center;
+  padding: 1rem 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.auth-tab:hover {
+  color: var(--text-primary);
+}
+
+.auth-tab.active {
+  color: var(--text-primary);
+}
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--accent-lime);
+}
+
+/* Form specific tweaks to match the dark theme better */
+.auth-form-side .form-group input {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.back-link {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+@media (min-width: 900px) {
+  .back-link {
+    display: none; /* Only show on mobile where visual side is hidden */
+  }
+}
