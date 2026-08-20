@@ -1,23 +1,24 @@
 :root {
-  /* Premium Dark Theme Core */
-  --bg-dark: #080A08;
-  --bg-light: #121411;
-  --bg-offwhite: #F4F2E9;
+  /* Premium Dark Theme Core - Graphite */
+  --bg-dark: #0A0B10;
+  --bg-light: #13151C;
+  --bg-offwhite: #F9FAFB;
   
-  /* Accents */
-  --accent-lime: #B7D84B;
-  --accent-lime-hover: #c4e357;
-  --accent-olive: #7D9140;
+  /* Accents - Violet, Teal, Magenta */
+  --accent-primary: #8B5CF6;
+  --accent-primary-hover: #A78BFA;
+  --accent-secondary: #06B6D4;
+  --accent-tertiary: #D946EF;
   
   /* Text */
   --text-primary: #F7F7F2;
-  --text-secondary: #A5AAA0;
-  --text-inverse: #080A08;
+  --text-secondary: #94A3B8;
+  --text-inverse: #0A0B10;
   
   /* Utilities */
-  --error-color: #ef4444;
-  --success-color: #10b981;
-  --border-color: rgba(255, 255, 255, 0.1);
+  --error-color: #EF4444;
+  --success-color: #10B981;
+  --border-color: rgba(255, 255, 255, 0.08);
   --border-color-light: rgba(0, 0, 0, 0.1);
   
   --radius-sm: 8px;
@@ -58,8 +59,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   padding: 0.875rem 1.75rem;
-  background-color: var(--accent-lime);
-  color: var(--text-inverse);
+  background-color: var(--accent-primary);
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 1rem;
   border: none;
@@ -70,9 +71,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn:hover:not(:disabled) {
-  background-color: var(--accent-lime-hover);
+  background-color: var(--accent-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(183, 216, 75, 0.2);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
 }
 
 .btn-secondary {
@@ -161,8 +162,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--accent-lime);
-  box-shadow: 0 0 0 3px rgba(183, 216, 75, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
 .error-message {
@@ -183,7 +184,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .auth-footer a {
-  color: var(--accent-lime);
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 500;
 }
@@ -217,7 +218,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .logo span {
-  color: var(--accent-lime);
+  color: var(--accent-primary);
 }
 
 .dashboard-main {
@@ -260,8 +261,8 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background-color: rgba(183, 216, 75, 0.15);
-  color: var(--accent-lime);
+  background-color: rgba(139, 92, 246, 0.15);
+  color: var(--accent-primary);
   text-transform: uppercase;
 }
 

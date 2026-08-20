@@ -37,7 +37,7 @@
 }
 
 .auth-visual-title span {
-  color: var(--accent-lime);
+  color: var(--accent-primary);
 }
 
 .auth-visual-subtitle {
@@ -117,7 +117,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background-color: var(--accent-lime);
+  background-color: var(--accent-primary);
 }
 
 /* Form specific tweaks to match the dark theme better */

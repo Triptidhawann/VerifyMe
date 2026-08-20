@@ -107,19 +107,19 @@ const Auth = () => {
         <div className="auth-visual-content animate-fade-up">
           <div className="auth-mock-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-lime)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold' }}>
                 VM
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>Verification Engine</div>
                 <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status: Active</div>
               </div>
-              <div style={{ marginLeft: 'auto', padding: '0.25rem 0.75rem', background: 'rgba(183, 216, 75, 0.1)', color: 'var(--accent-lime)', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600 }}>
+              <div style={{ marginLeft: 'auto', padding: '0.25rem 0.75rem', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-primary)', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600 }}>
                 SECURE
               </div>
             </div>
             <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ width: '100%', height: '100%', background: 'var(--accent-lime)' }}></div>
+              <div style={{ width: '100%', height: '100%', background: 'var(--accent-primary)' }}></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               <span>Identity Signals connected</span>
@@ -182,7 +182,7 @@ const Auth = () => {
             <div className="form-group" style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <label htmlFor="password">Password</label>
-                <a href="#" style={{ fontSize: '0.875rem', color: 'var(--accent-lime)', textDecoration: 'none' }}>Forgot password?</a>
+                <a href="#" style={{ fontSize: '0.875rem', color: 'var(--accent-primary)', textDecoration: 'none' }}>Forgot password?</a>
               </div>
               <input
                 type="password"
