@@ -4,6 +4,8 @@ const Hero = () => {
   return (
     <section className="hero-section">
       <div className="container hero-grid">
+        
+        {/* Left Content */}
         <div className="hero-content animate-fade-up">
           <h1>Know Before<br />You Trust.</h1>
           <p>
@@ -15,27 +17,14 @@ const Hero = () => {
           </div>
         </div>
         
-        {/* Eye-Scan Security Visualization */}
-        <div className="eye-scan-container animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <div className="scan-ring-outer"></div>
-          <div className="scan-ring-inner"></div>
-          <div className="scan-beam"></div>
-          <div className="scan-core">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              <path d="M12 8v4"></path>
-              <path d="M12 16h.01"></path>
-            </svg>
-          </div>
-          
-          <div className="scan-status-panel">
-            <div className="status-label">Engine Status</div>
-            <div className="status-value">
-              <div className="status-indicator"></div>
-              ANALYZING SIGNALS
-            </div>
+        {/* Right Content - Full Size 3D Robot */}
+        <div className="hero-visual-container animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="ai-robot-wrapper full-size">
+            <img src="/robot-assistant.jpg" alt="AI Verification Robot" className="ai-robot-image" />
+            <div className="robot-floor-shadow"></div>
           </div>
         </div>
+
       </div>
     </section>
   );
