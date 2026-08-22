@@ -1,12 +1,15 @@
+import InteractiveDemo from './InteractiveDemo';
+
 const VerificationJourney = () => {
   return (
     <section id="how-it-works" className="section-padding">
       <div className="container">
         <div className="section-title">
-          <h2>From Uncertainty to Decision</h2>
-          <p>A unified verification pipeline.</p>
+          <h2>How VerifyMe Works</h2>
+          <p>From raw input to confident decision.</p>
         </div>
         
+        {/* PART A - CONCEPTUAL FLOW */}
         <div className="journey-container">
           <div className="journey-line"></div>
           
@@ -39,6 +42,15 @@ const VerificationJourney = () => {
             <h4>Decide</h4>
             <p>Act with confidence.</p>
           </div>
+        </div>
+
+        {/* PART B - INTERACTIVE DEMO */}
+        <div className="demo-section">
+          <div className="section-title" style={{ marginTop: '6rem', marginBottom: '3rem' }}>
+            <h2>See VerifyMe in Action</h2>
+            <p>Watch an unknown entity move from raw input to an explainable trust assessment.</p>
+          </div>
+          <InteractiveDemo />
         </div>
       </div>
     </section>

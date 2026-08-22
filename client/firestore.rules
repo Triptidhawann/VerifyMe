@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can create their profile only if the document ID matches their Firebase Auth UID
+      // and they are setting their role to 'USER' initially
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.role == 'USER';
+      
+      // Users can update their own profile, but CANNOT change their role
+      // request.resource.data.role must equal the existing resource.data.role
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+                    
+      // Only admins or automated backend deletion flows should be allowed to delete
+      allow delete: if false; 
+    }
+    
+    // Future expansion placeholder rules (e.g. saved checks)
+    match /users/{userId}/savedChecks/{checkId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
