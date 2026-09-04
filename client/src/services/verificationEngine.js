@@ -161,7 +161,7 @@ const analyzeUrl = (urlStr) => {
   };
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.PROD ? '/.netlify/functions/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
 
 export const verifyEntity = async ({ type, value, token }) => {
   if (!token) {
