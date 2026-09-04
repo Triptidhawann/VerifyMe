@@ -1,0 +1,118 @@
+.verify-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ff5b5b;
+  background: rgba(255, 91, 91, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 0.9rem;
+}
+
+/* Analyzing State */
+.analyzing-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 350px;
+}
+
+.scanner-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.security-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+  border-top-color: transparent;
+  animation: spin 1.5s linear infinite;
+}
+
+.search-icon {
+  color: var(--accent-primary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.analyzing-value {
+  color: var(--text-secondary);
+  font-family: monospace;
+  margin-top: 8px;
+  background: rgba(255,255,255,0.05);
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.analysis-steps {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+  text-align: left;
+}
+
+.step {
+  font-size: 0.85rem;
+  padding-left: 24px;
+  position: relative;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.step.processing {
+  color: var(--text-primary);
+}
+.step.processing::before {
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+  animation: pulse 1.5s infinite;
+}
+
+.step.pending {
+  color: var(--text-muted);
+}
+.step.pending::before {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
+  50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+  100% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
+}
+
+.scanner-container .search-icon.scanning {
+  animation: none; /* override pulse */
+}
