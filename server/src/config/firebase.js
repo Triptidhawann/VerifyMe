@@ -7,9 +7,9 @@ const admin = require('firebase-admin');
 
 try {
   admin.initializeApp({
-    projectId: 'verifyme-96690'
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID
   });
-  console.log('Firebase Admin initialized for verifyme-96690');
+  console.log('Firebase Admin initialized');
 } catch (error) {
   // If already initialized, ignore the error
   if (!/already exists/.test(error.message)) {
