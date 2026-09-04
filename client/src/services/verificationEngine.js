@@ -181,7 +181,9 @@ export const verifyEntity = async ({ type, value, token }) => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.error || 'Verification failed on server');
+      const serverError = new Error(data.error || 'Verification failed on server');
+      serverError.isServerError = true;
+      throw serverError;
     }
 
     return {
@@ -192,6 +194,10 @@ export const verifyEntity = async ({ type, value, token }) => {
     };
   } catch (err) {
     console.error("Backend verification error:", err.message);
+    if (err.isServerError) {
+      throw err; // Re-throw the actual server error message
+    }
+    // Only show this for actual network failures (e.g. connection refused)
     throw new Error('Unable to connect to the verification service. Please try again in a moment.');
   }
 };
