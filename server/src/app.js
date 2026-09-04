@@ -24,10 +24,17 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow if no origin (e.g. Postman), if explicitly allowed, or if it's from the deployed Netlify app
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('netlify.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // Clean up trailing slash issues just in case
+      const originNoSlash = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+      if (allowedOrigins.includes(originNoSlash)) {
+         callback(null, true);
+      } else {
+         callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true
