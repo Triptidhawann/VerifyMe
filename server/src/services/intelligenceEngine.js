@@ -287,11 +287,52 @@ External Threat Intelligence: UNAVAILABLE
 
 Return your JSON assessment now.`;
 
-  const makeGroqRequest = async (retries = 2, targetModel = 'llama-3.3-70b-versatile') => {
+  // Dynamically discover which models the user's specific account has access to
+  const getAvailableModel = async () => {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/models", {
+        headers: { "Authorization": `Bearer ${process.env.GROQ_API_KEY}` }
+      });
+      const data = await response.json();
+      
+      if (data && data.data) {
+        const availableModels = data.data.map(m => m.id);
+        console.log("[GROQ] Account has access to models:", availableModels.join(", "));
+        
+        // Priority list
+        const preferences = [
+          'llama-3.3-70b-versatile', 
+          'llama-3.1-8b-instant', 
+          'llama3-8b-8192', 
+          'llama3-70b-8192'
+        ];
+        
+        for (const pref of preferences) {
+          if (availableModels.includes(pref)) {
+            return pref;
+          }
+        }
+        
+        // If preferred models aren't available, pick the first Llama model they have access to
+        const anyLlama = availableModels.find(m => m.toLowerCase().includes('llama'));
+        if (anyLlama) return anyLlama;
+      }
+    } catch (e) {
+      console.warn("[GROQ] Failed to fetch available models", e.message);
+    }
+    // Absolute last resort
+    return 'llama3-8b-8192';
+  };
+
+  const makeGroqRequest = async (retries = 2) => {
     try {
       console.log('[GROQ] Request started');
       console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
-      console.log(`[GROQ] Model: ${targetModel}`);
+      
+      // Get a guaranteed working model for this specific account
+      const targetModel = await getAvailableModel();
+      console.log(`[GROQ] Selected Model: ${targetModel}`);
+      
       console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
       console.log(`[GROQ] Request started at: ${new Date().toISOString()}`);
       
@@ -322,12 +363,6 @@ Return your JSON assessment now.`;
     } catch (err) {
       console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
       console.error(`[GROQ] Error message: ${err.message}`);
-      
-      // Fallback to smaller model if the 70B model throws a 404 (model not found / no access)
-      if (err.status === 404 && targetModel === 'llama-3.3-70b-versatile') {
-        console.log(`[GROQ] Account lacks access to 70B model. Falling back to llama-3.1-8b-instant...`);
-        return makeGroqRequest(retries, 'llama-3.1-8b-instant');
-      }
 
       // Retry on rate limit, timeout, or server errors, but NOT on auth errors
       const isRetryable = err.message.includes('timed out') || 
@@ -337,7 +372,7 @@ Return your JSON assessment now.`;
       if (isRetryable && retries > 0) {
         console.log(`[GROQ] Retrying Groq request... (${retries} left)`);
         await new Promise(resolve => setTimeout(resolve, 1500));
-        return makeGroqRequest(retries - 1, targetModel);
+        return makeGroqRequest(retries - 1);
       }
       
       throw err; // Let the outer catch handle the final fallback
