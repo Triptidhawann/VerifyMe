@@ -161,13 +161,15 @@ const analyzeUrl = (urlStr) => {
   };
 };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export const verifyEntity = async ({ type, value, token }) => {
   if (!token) {
     throw new Error('Authentication required to perform verification.');
   }
 
   try {
-    const response = await fetch('http://localhost:5000/api/verifications', {
+    const response = await fetch(`${API_URL}/verifications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -176,7 +178,7 @@ export const verifyEntity = async ({ type, value, token }) => {
       body: JSON.stringify({ type, input: value })
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       throw new Error(data.message || 'Verification failed on server');
@@ -189,7 +191,7 @@ export const verifyEntity = async ({ type, value, token }) => {
       ...data.verification
     };
   } catch (err) {
-    console.error("Backend verification error:", err);
-    throw new Error(err.message || 'Unable to reach the VerifyMe intelligence engine.');
+    console.error("Backend verification error:", err.message);
+    throw new Error('Unable to connect to the verification service. Please try again in a moment.');
   }
 };
