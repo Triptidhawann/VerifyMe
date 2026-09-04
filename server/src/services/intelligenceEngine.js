@@ -289,11 +289,19 @@ Return your JSON assessment now.`;
 
   const makeGroqRequest = async (retries = 2) => {
     try {
-      console.log('[VerifyMe Diagnostic] Groq request started');
+      console.log('[GROQ] Request started');
+      console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
+      console.log(`[GROQ] Model: llama-3.3-70b-versatile`);
+      console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
+      console.log(`[GROQ] Request started at: ${new Date().toISOString()}`);
       
       // Implement a race condition for a 8-second timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Groq request timed out')), 8000)
+        setTimeout(() => {
+          const timeoutErr = new Error('Groq request timed out');
+          timeoutErr.status = 408;
+          reject(timeoutErr);
+        }, 8000)
       );
 
       const groqPromise = groq.chat.completions.create({
@@ -307,11 +315,13 @@ Return your JSON assessment now.`;
       });
 
       const chatCompletion = await Promise.race([groqPromise, timeoutPromise]);
-      console.log('[VerifyMe Diagnostic] Groq response received');
+      console.log(`[GROQ] Response status: 200`);
+      console.log(`[GROQ] Parsed successfully: true`);
 
       return JSON.parse(chatCompletion.choices[0].message.content);
     } catch (err) {
-      console.error(`Groq API Error: ${err.message}`);
+      console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
+      console.error(`[GROQ] Error message: ${err.message}`);
       
       // Retry on rate limit, timeout, or server errors, but NOT on auth errors
       const isRetryable = err.message.includes('timed out') || 
@@ -319,8 +329,7 @@ Return your JSON assessment now.`;
                           (err.status >= 500 && err.status <= 599);
 
       if (isRetryable && retries > 0) {
-        console.log(`[VerifyMe Diagnostic] Retrying Groq request... (${retries} left)`);
-        // Wait 1.5 seconds before retrying
+        console.log(`[GROQ] Retrying Groq request... (${retries} left)`);
         await new Promise(resolve => setTimeout(resolve, 1500));
         return makeGroqRequest(retries - 1);
       }
@@ -332,13 +341,13 @@ Return your JSON assessment now.`;
   try {
     return await makeGroqRequest();
   } catch (err) {
-    console.error("Groq Final API Error:", err.message);
-    // Fallback if Groq completely fails
+    console.log(`[GROQ] Final failure reached. Forwarding error to UI.`);
+    // Fallback if Groq completely fails, now WITH the exact error message for debugging
     return {
-      summary: "Technical validation was completed, but VerifyMe AI interpretation is temporarily unavailable.",
-      whyThisScore: "AI interpretation could not be generated due to a connection or capacity issue with the AI provider.",
+      summary: `AI interpretation failed: ${err.message}`,
+      whyThisScore: `Error Code: ${err.status || 'Unknown'}. Please ensure GROQ_API_KEY is valid and the model is supported.`,
       verdict: "AI Analysis Incomplete.",
-      recommendedAction: "Review the technical signals and proceed with extreme caution."
+      recommendedAction: "Fix the Groq integration error shown above."
     };
   }
 };
