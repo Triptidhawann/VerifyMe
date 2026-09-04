@@ -288,15 +288,17 @@ External Threat Intelligence: UNAVAILABLE
 Return your JSON assessment now.`;
 
   try {
+    console.log('[VerifyMe Diagnostic] Groq request started');
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'groq/compound', // using compound to ensure it works
+      model: 'llama3-8b-8192',
       temperature: 0.1,
       response_format: { type: "json_object" }
     });
+    console.log('[VerifyMe Diagnostic] Groq response received');
 
     return JSON.parse(chatCompletion.choices[0].message.content);
   } catch (err) {

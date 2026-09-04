@@ -181,7 +181,7 @@ export const verifyEntity = async ({ type, value, token }) => {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.message || 'Verification failed on server');
+      throw new Error(data.error || 'Verification failed on server');
     }
 
     return {

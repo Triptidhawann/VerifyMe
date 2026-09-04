@@ -15,7 +15,7 @@ const createVerification = async (req, res, next) => {
     if (!type || !input) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide both type and input for verification.'
+        error: 'Please provide both type and input for verification.'
       });
     }
 
@@ -23,7 +23,7 @@ const createVerification = async (req, res, next) => {
     if (!validTypes.includes(type)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid verification type. Must be one of: ${validTypes.join(', ')}`
+        error: `Invalid verification type. Must be one of: ${validTypes.join(', ')}`
       });
     }
 
@@ -33,12 +33,20 @@ const createVerification = async (req, res, next) => {
     if (!normalizedInput) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid input format provided.'
+        error: 'Invalid input format provided.'
       });
     }
 
+    // Diagnostic logging
+    console.log('[VerifyMe Diagnostic] Function started');
+    console.log('[VerifyMe Diagnostic] Request received for type:', type);
+    console.log(`[VerifyMe Diagnostic] GROQ_API_KEY exists: ${!!process.env.GROQ_API_KEY}`);
+    console.log(`[VerifyMe Diagnostic] Firebase Configured: ${!!process.env.VITE_FIREBASE_PROJECT_ID}`);
+    
     // 3. Perform analysis
+    console.log('[VerifyMe Diagnostic] Validation started');
     const analysisResult = await performVerification(type, normalizedInput);
+    console.log('[VerifyMe Diagnostic] Analysis completed successfully');
 
     // 4. Return clean response to frontend
     res.status(200).json({
