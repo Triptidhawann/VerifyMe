@@ -1,7 +1,7 @@
 [build]
   command = "cd client && npm install && npm run build && cd ../server && npm install && cd .."
   publish = "client/dist"
-  functions = "server/netlify-functions"
+  functions = "netlify/functions"
 
 # Route API requests to the Netlify serverless function
 [[redirects]]

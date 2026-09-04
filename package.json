@@ -1,0 +1,23 @@
+{
+  "name": "verifyme",
+  "version": "1.0.0",
+  "description": "VerifyMe is a digital trust and verification platform. It will eventually provide users the ability to verify phone numbers, email addresses, and website URLs. The application will offer identity information, trust scores, reputation signals, risk levels, and an administrative system.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Triptidhawann/VerifyMe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Triptidhawann/VerifyMe/issues"
+  },
+  "homepage": "https://github.com/Triptidhawann/VerifyMe#readme",
+  "dependencies": {
+    "serverless-http": "^4.0.0"
+  }
+}
