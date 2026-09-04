@@ -287,26 +287,56 @@ External Threat Intelligence: UNAVAILABLE
 
 Return your JSON assessment now.`;
 
-  try {
-    console.log('[VerifyMe Diagnostic] Groq request started');
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      model: 'llama3-8b-8192',
-      temperature: 0.1,
-      response_format: { type: "json_object" }
-    });
-    console.log('[VerifyMe Diagnostic] Groq response received');
+  const makeGroqRequest = async (retries = 2) => {
+    try {
+      console.log('[VerifyMe Diagnostic] Groq request started');
+      
+      // Implement a race condition for a 8-second timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Groq request timed out')), 8000)
+      );
 
-    return JSON.parse(chatCompletion.choices[0].message.content);
+      const groqPromise = groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.1,
+        response_format: { type: "json_object" }
+      });
+
+      const chatCompletion = await Promise.race([groqPromise, timeoutPromise]);
+      console.log('[VerifyMe Diagnostic] Groq response received');
+
+      return JSON.parse(chatCompletion.choices[0].message.content);
+    } catch (err) {
+      console.error(`Groq API Error: ${err.message}`);
+      
+      // Retry on rate limit, timeout, or server errors, but NOT on auth errors
+      const isRetryable = err.message.includes('timed out') || 
+                          err.status === 429 || 
+                          (err.status >= 500 && err.status <= 599);
+
+      if (isRetryable && retries > 0) {
+        console.log(`[VerifyMe Diagnostic] Retrying Groq request... (${retries} left)`);
+        // Wait 1.5 seconds before retrying
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return makeGroqRequest(retries - 1);
+      }
+      
+      throw err; // Let the outer catch handle the final fallback
+    }
+  };
+
+  try {
+    return await makeGroqRequest();
   } catch (err) {
-    console.error("Groq API Error:", err);
-    // Fallback if Groq fails
+    console.error("Groq Final API Error:", err.message);
+    // Fallback if Groq completely fails
     return {
       summary: "Technical validation was completed, but VerifyMe AI interpretation is temporarily unavailable.",
-      whyThisScore: "AI interpretation could not be generated.",
+      whyThisScore: "AI interpretation could not be generated due to a connection or capacity issue with the AI provider.",
       verdict: "AI Analysis Incomplete.",
       recommendedAction: "Review the technical signals and proceed with extreme caution."
     };
