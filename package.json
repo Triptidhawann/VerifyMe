@@ -18,6 +18,14 @@
   },
   "homepage": "https://github.com/Triptidhawann/VerifyMe#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.3.0",
+    "groq-sdk": "^1.6.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.4",
     "serverless-http": "^4.0.0"
   }
 }
