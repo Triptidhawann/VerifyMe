@@ -1,5 +1,6 @@
-const Verification = require('../models/Verification');
+// const Verification = require('../models/Verification');
 const { normalizeInput } = require('../services/verificationService');
+const { performVerification } = require('../services/intelligenceEngine');
 
 /**
  * @desc    Create a new verification request
@@ -36,24 +37,19 @@ const createVerification = async (req, res, next) => {
       });
     }
 
-    // 3. Create verification record
-    const verification = await Verification.create({
-      user: req.user._id,
-      type,
-      input,
-      normalizedInput,
-      status: 'pending' // Engine will pick this up later
-    });
+    // 3. Perform analysis
+    const analysisResult = await performVerification(type, normalizedInput);
 
-    // 4. Return clean response
-    res.status(201).json({
+    // 4. Return clean response to frontend
+    res.status(200).json({
       success: true,
-      message: 'Verification request created successfully.',
+      message: 'Verification request processed successfully.',
       verification: {
-        id: verification._id,
-        type: verification.type,
-        status: verification.status,
-        createdAt: verification.createdAt
+        id: `local-${Date.now()}`, // Temporary ID, frontend generates Firestore ID via addDoc
+        targetType: type,
+        target: input,
+        normalizedTarget: normalizedInput,
+        ...analysisResult
       }
     });
 

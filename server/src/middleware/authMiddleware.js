@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const admin = require('../config/firebase');
+const { getAuth } = require('firebase-admin/auth');
 
 const protect = async (req, res, next) => {
   let token;
@@ -10,17 +10,20 @@ const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      req.user = await User.findById(decoded.id).select('-password');
+      // Verify Firebase ID Token
+      const decodedToken = await getAuth().verifyIdToken(token);
       
-      if (!req.user) {
-        res.status(401);
-        throw new Error('Not authorized, user not found');
-      }
+      req.user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        name: decodedToken.name,
+        role: 'USER' // Role can be stored in custom claims if needed later
+      };
 
       next();
     } catch (error) {
+      console.error('Firebase Auth Error:', error);
       res.status(401);
       next(new Error('Not authorized, token failed'));
     }

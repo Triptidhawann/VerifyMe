@@ -7,10 +7,10 @@ const PORT = process.env.PORT || 5000;
 // Connect to Database, then start server
 const startServer = async () => {
   try {
-    // 1. Connect to MongoDB
-    await connectDB();
+    // We are now using Firebase Admin SDK and Firestore instead of MongoDB
+    // await connectDB();
     
-    // 2. Start Express server only after successful connection
+    // 2. Start Express server
     app.listen(PORT, () => {
       console.log(`VerifyMe Server is running on port ${PORT}`);
     });

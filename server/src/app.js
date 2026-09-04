@@ -21,17 +21,9 @@ app.use(express.json());
 
 // Basic health check endpoint
 app.get('/api/health', (req, res) => {
-  // mongoose.connection.readyState returns:
-  // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-  const dbState = mongoose.connection.readyState;
-  let dbStatus = 'disconnected';
-  if (dbState === 1) dbStatus = 'connected';
-  else if (dbState === 2) dbStatus = 'connecting';
-  
   res.json({
     status: 'success',
-    message: 'VerifyMe backend is running normally.',
-    database: dbStatus,
+    message: 'VerifyMe backend is running normally with Firebase Auth.',
     timestamp: new Date().toISOString()
   });
 });
