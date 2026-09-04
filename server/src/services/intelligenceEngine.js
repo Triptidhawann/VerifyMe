@@ -287,11 +287,11 @@ External Threat Intelligence: UNAVAILABLE
 
 Return your JSON assessment now.`;
 
-  const makeGroqRequest = async (retries = 2) => {
+  const makeGroqRequest = async (retries = 2, targetModel = 'llama-3.3-70b-versatile') => {
     try {
       console.log('[GROQ] Request started');
       console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
-      console.log(`[GROQ] Model: llama-3.3-70b-versatile`);
+      console.log(`[GROQ] Model: ${targetModel}`);
       console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
       console.log(`[GROQ] Request started at: ${new Date().toISOString()}`);
       
@@ -309,7 +309,7 @@ Return your JSON assessment now.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        model: 'llama-3.3-70b-versatile',
+        model: targetModel,
         temperature: 0.1,
         response_format: { type: "json_object" }
       });
@@ -323,6 +323,12 @@ Return your JSON assessment now.`;
       console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
       console.error(`[GROQ] Error message: ${err.message}`);
       
+      // Fallback to smaller model if the 70B model throws a 404 (model not found / no access)
+      if (err.status === 404 && targetModel === 'llama-3.3-70b-versatile') {
+        console.log(`[GROQ] Account lacks access to 70B model. Falling back to llama-3.1-8b-instant...`);
+        return makeGroqRequest(retries, 'llama-3.1-8b-instant');
+      }
+
       // Retry on rate limit, timeout, or server errors, but NOT on auth errors
       const isRetryable = err.message.includes('timed out') || 
                           err.status === 429 || 
@@ -331,7 +337,7 @@ Return your JSON assessment now.`;
       if (isRetryable && retries > 0) {
         console.log(`[GROQ] Retrying Groq request... (${retries} left)`);
         await new Promise(resolve => setTimeout(resolve, 1500));
-        return makeGroqRequest(retries - 1);
+        return makeGroqRequest(retries - 1, targetModel);
       }
       
       throw err; // Let the outer catch handle the final fallback
