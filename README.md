@@ -1,71 +1,109 @@
-# VerifyMe
+<div align="center">
+  <h1>VerifyMe 🛡️</h1>
+  <p><strong>Digital Trust & Verification Intelligence Platform</strong></p>
+</div>
 
-VerifyMe is a digital trust and verification platform. It will eventually provide users the ability to verify phone numbers, email addresses, and website URLs. The application will offer identity information, trust scores, reputation signals, risk levels, and an administrative system.
+VerifyMe is a professional digital trust platform that empowers users to investigate and verify unknown digital identities before trusting, responding, sharing, or clicking. It analyzes phone numbers, email addresses, and website URLs, providing deterministic evidence combined with AI-powered risk assessment.
 
-## Current Technology Stack
+## 🚀 Features
+
+- **Comprehensive Verification:** Analyze Emails (Syntax, DNS, MX, SPF, DMARC), Phone Numbers (E.164 formats, Country Codes), and Website URLs (Reachability, TLS, Format).
+- **AI-Powered Intelligence:** Leverages Groq's high-speed LLMs (Llama 3) to interpret deterministic signals and assign actionable risk scores and recommended actions.
+- **Evidence-Based Scoring:** Built on the philosophy that "Valid ≠ Trusted" and "Unknown Must Not Become Safe".
+- **Secure Authentication:** Integrated with Firebase Authentication for seamless, secure user access.
+- **History Tracking:** Automatically persists verification history to Firebase Firestore for later review.
+- **Serverless Architecture:** Fully optimized for Netlify Serverless Functions deployment.
+
+## 💻 Technology Stack
 
 ### Frontend
-- React
-- Vite
-- JavaScript
-- CSS
+- **Framework:** React 18 (Vite)
+- **Styling:** Custom CSS with a professional dark-mode UI
+- **Routing:** React Router DOM
+- **Authentication:** Firebase Auth
 
 ### Backend
-- Node.js
-- Express.js
+- **Environment:** Node.js / Express.js
+- **Serverless Wrapper:** Serverless-HTTP (for Netlify deployment)
+- **AI Integration:** Groq SDK (`llama3-8b-8192`)
+- **Database / Admin:** Firebase Admin SDK
 
-## Current Project Structure
+## 📂 Project Structure
 
-```
+```text
 VerifyMe/
-├── client/                 # Frontend React application (Vite)
-├── server/                 # Backend Node.js/Express API
+├── client/                 # React Frontend (Vite)
+├── server/                 # Express Backend API
 │   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── utils/
-│   │   └── app.js          # Express app configuration
-│   └── server.js           # Main backend entry point
-├── README.md
-└── .gitignore
+│   │   ├── controllers/    # Route handlers
+│   │   ├── middleware/     # Auth & Error handling
+│   │   ├── routes/         # Express routes
+│   │   └── services/       # Groq AI & Verification logic
+├── netlify/
+│   └── functions/          # Netlify Serverless Function entry point
+├── netlify.toml            # Netlify deployment configuration
+└── package.json            # Root configuration for cloud deployment
 ```
 
-## How to Install Dependencies
+## 🛠️ Local Development Setup
 
-1. **Frontend**:
-   ```bash
-   cd client
-   npm install
-   ```
+### 1. Prerequisites
+- Node.js (v18+)
+- A Firebase Project (with Authentication and Firestore enabled)
+- A Groq API Key
 
-2. **Backend**:
-   ```bash
-   cd server
-   npm install
-   ```
+### 2. Environment Variables
+Create a `.env` file in the `client/` directory:
+```env
+VITE_FIREBASE_API_KEY="your_api_key"
+VITE_FIREBASE_AUTH_DOMAIN="your_project_id.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="your_project_id"
+VITE_FIREBASE_STORAGE_BUCKET="your_project_id.appspot.com"
+VITE_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
+VITE_FIREBASE_APP_ID="your_app_id"
+```
 
-## How to Run Frontend
+Create a `.env` file in the `server/` directory:
+```env
+GROQ_API_KEY="your_groq_api_key"
+FRONTEND_URL="http://localhost:5173"
+```
 
+### 3. Installation
+Install dependencies for both frontend and backend:
 ```bash
+# Install frontend dependencies
 cd client
-npm run dev
+npm install
+
+# Install backend dependencies
+cd ../server
+npm install
 ```
-The frontend should start on standard Vite development port (typically `http://localhost:5173`).
 
-## How to Run Backend
-
+### 4. Running Locally
+Start the backend server:
 ```bash
 cd server
 npm run dev
+# Runs on http://localhost:5000
 ```
-The backend server runs on `http://localhost:5000`. You can test the health endpoint at `http://localhost:5000/api/health`.
 
-## Current Development Status
-- **Phase 0**: Project foundation initialized.
-- Frontend and backend skeletal structures created.
-- Express server configured with CORS, JSON parsing, and a basic health-check endpoint.
-- Ready for Phase 1 development (database integration, core routing, models).
+Start the frontend application:
+```bash
+cd client
+npm run dev
+# Runs on http://localhost:5173
+```
+
+## ☁️ Production Deployment (Netlify)
+
+VerifyMe is configured for unified deployment on Netlify. 
+
+1. Connect your GitHub repository to Netlify.
+2. The `netlify.toml` automatically handles the build commands (`cd client && npm run build...`).
+3. Add the following **Environment Variables** in your Netlify Dashboard:
+   - All `VITE_FIREBASE_*` variables
+   - `GROQ_API_KEY`
+   - `FRONTEND_URL` (Set to your Netlify site URL, e.g., `https://yoursite.netlify.app`)
+4. Deploy! The backend automatically deploys as a highly scalable Netlify Function.
