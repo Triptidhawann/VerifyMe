@@ -367,15 +367,65 @@ Return your JSON assessment now.`;
   try {
     return await makeGroqRequest();
   } catch (err) {
-    console.log(`[GROQ] Final failure reached. Returning clean fallback to UI.`);
+    console.log(`[GROQ] Final failure reached. Generating deterministic technical fallback.`);
     
-    // As requested: Do NOT send raw Groq errors directly to the frontend.
-    // The frontend receives a clean, controlled response while preserving the UI schema.
+    // Deterministic Fallback Logic based strictly on actual technical signals
+    const { riskLevel, warnings = [] } = deterministicData;
+    
+    let summary = "";
+    let whyThisScore = "";
+    let recommendedAction = "";
+    
+    // 1. Generate Summary
+    if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
+      summary = "Multiple technical risk indicators were detected.";
+    } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
+      summary = "Some verification signals require additional review.";
+    } else {
+      summary = "No major technical risk indicators were detected.";
+    }
+
+    // 2. Generate Explanation based on ACTUAL signals
+    if (warnings.length > 0) {
+      whyThisScore = `The technical verification identified the following concerns: ${warnings.join('; ')}. `;
+    } else {
+      whyThisScore = `The available technical checks did not identify significant warning signs. `;
+    }
+    
+    // 3. Generate Specific Recommendations
+    if (type === 'email') {
+      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
+        recommendedAction = "Do not rely on this address. Avoid sharing sensitive information or making payments until independently verified.";
+      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
+        recommendedAction = "Treat this address with caution and verify the sender through an independent communication channel.";
+      } else {
+        recommendedAction = "No major technical email configuration issues were detected. This does not confirm that the mailbox owner is legitimate, so verify the sender before sharing sensitive information.";
+      }
+    } else if (type === 'phone') {
+      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
+        recommendedAction = "Do not share OTPs, passwords, financial information, or other sensitive data until the caller's identity is independently verified.";
+      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
+        recommendedAction = "Treat this number with caution. Independently verify the caller before sharing sensitive information.";
+      } else {
+        recommendedAction = "The number passed available technical checks, but technical validation does not prove who controls the number. Verify the caller through an independent channel before taking sensitive action.";
+      }
+    } else if (type === 'website') {
+      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
+        recommendedAction = "Do not enter passwords, payment information, OTPs, or other sensitive data on this website.";
+      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
+        recommendedAction = "Exercise caution. Do not submit sensitive data until the website and organization are independently verified.";
+      } else {
+        recommendedAction = "The available technical checks did not identify major issues, but technical validation does not guarantee that the website or organization is legitimate.";
+      }
+    } else {
+      recommendedAction = "Proceed with normal caution and verify identity through an independent source.";
+    }
+
     return {
-      summary: "AI interpretation is temporarily unavailable.",
-      whyThisScore: "The technical verification was completed successfully, but the AI engine could not generate a risk interpretation at this time.",
-      verdict: "AI Analysis Unavailable",
-      recommendedAction: "Please rely on the technical signals provided above."
+      summary: summary,
+      whyThisScore: whyThisScore + "\n\n(Note: AI interpretation is temporarily unavailable. This assessment is based purely on the deterministic technical verification signals.)",
+      verdict: "Technical Assessment",
+      recommendedAction: recommendedAction
     };
   }
 };
