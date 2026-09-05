@@ -292,8 +292,8 @@ Return your JSON assessment now.`;
       console.log('[GROQ] Request started');
       console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
       
-      // Use a strict, universally available Chat Completions model that supports JSON
-      const targetModel = 'mixtral-8x7b-32768';
+      // Use a configurable model with a highly compatible legacy fallback
+      const targetModel = process.env.GROQ_MODEL || 'llama3-8b-8192';
       console.log(`[GROQ] Selected Model: ${targetModel}`);
       
       console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
@@ -314,9 +314,14 @@ Return your JSON assessment now.`;
           { role: 'user', content: userPrompt }
         ],
         model: targetModel,
-        temperature: 0.1,
-        response_format: { type: "json_object" }
+        temperature: 0.1
       };
+
+      // Only modern models explicitly support strict JSON mode. Legacy models (like llama3-8b-8192) will crash if this is passed.
+      const supportsJsonMode = targetModel.includes('3.1') || targetModel.includes('3.3') || targetModel.includes('mixtral');
+      if (supportsJsonMode) {
+        payload.response_format = { type: "json_object" };
+      }
 
       const groqPromise = groq.chat.completions.create(payload);
 
@@ -362,28 +367,15 @@ Return your JSON assessment now.`;
   try {
     return await makeGroqRequest();
   } catch (err) {
-    console.log(`[GROQ] Final failure reached. Forwarding error to UI.`);
+    console.log(`[GROQ] Final failure reached. Returning clean fallback to UI.`);
     
-    let whyThisScore = "AI interpretation could not be generated.";
-    const status = err.status || 500;
-    
-    if (status === 401 || status === 403) {
-      whyThisScore = "Groq authentication failed. Please check the API key.";
-    } else if (status === 400) {
-      whyThisScore = "Groq request configuration error (e.g., unsupported model or payload).";
-    } else if (status === 429) {
-      whyThisScore = "Groq rate limit reached. Please try again later.";
-    } else if (status === 408) {
-      whyThisScore = "Groq request timed out.";
-    } else if (status >= 500) {
-      whyThisScore = "Groq service temporarily unavailable.";
-    }
-
+    // As requested: Do NOT send raw Groq errors directly to the frontend.
+    // The frontend receives a clean, controlled response while preserving the UI schema.
     return {
-      summary: `AI interpretation failed: ${err.message}`,
-      whyThisScore: whyThisScore,
-      verdict: "AI Analysis Incomplete.",
-      recommendedAction: "Review the technical signals and proceed with extreme caution."
+      summary: "AI interpretation is temporarily unavailable.",
+      whyThisScore: "The technical verification was completed successfully, but the AI engine could not generate a risk interpretation at this time.",
+      verdict: "AI Analysis Unavailable",
+      recommendedAction: "Please rely on the technical signals provided above."
     };
   }
 };
