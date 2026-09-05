@@ -395,7 +395,7 @@ Return valid JSON exactly matching this schema:
 
   const makeGroqRequest = async (retries = 1) => {
     try {
-      const targetModel = process.env.GROQ_MODEL || 'llama3-8b-8192';
+      const targetModel = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
       
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => { const e = new Error('Timeout'); e.status = 408; reject(e); }, 8000)
@@ -408,7 +408,7 @@ Return valid JSON exactly matching this schema:
       };
 
       // Only attempt JSON mode if the model explicitly supports it without crashing
-      if (targetModel.includes('3.1') || targetModel.includes('3.3')) {
+      if (targetModel.includes('3.1') || targetModel.includes('3.3') || targetModel.includes('json')) {
         payload.response_format = { type: "json_object" };
       }
 

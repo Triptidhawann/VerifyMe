@@ -25,7 +25,7 @@ VerifyMe is a professional digital trust platform that empowers users to investi
 ### Backend
 - **Environment:** Node.js / Express.js
 - **Serverless Wrapper:** Serverless-HTTP (for Netlify deployment)
-- **AI Integration:** Groq SDK (`llama3-8b-8192`)
+- **AI Integration:** Groq SDK (`openai/gpt-oss-20b` fallback-configurable)
 - **Database / Admin:** Firebase Admin SDK
 
 ## 📂 Project Structure
