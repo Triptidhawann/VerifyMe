@@ -345,21 +345,45 @@ Return your JSON assessment now.`;
         }, 8000)
       );
 
-      const groqPromise = groq.chat.completions.create({
+      const payload = {
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         model: targetModel,
-        temperature: 0.1,
-        response_format: { type: "json_object" }
-      });
+        temperature: 0.1
+      };
+
+      // Only attach strict JSON mode to modern models that explicitly support it in the Groq API
+      const supportsJsonMode = targetModel.includes('3.1') || targetModel.includes('3.3') || targetModel.includes('mixtral');
+      if (supportsJsonMode) {
+        payload.response_format = { type: "json_object" };
+      }
+
+      const groqPromise = groq.chat.completions.create(payload);
 
       const chatCompletion = await Promise.race([groqPromise, timeoutPromise]);
       console.log(`[GROQ] Response status: 200`);
       console.log(`[GROQ] Parsed successfully: true`);
 
-      return JSON.parse(chatCompletion.choices[0].message.content);
+      const contentString = chatCompletion.choices[0].message.content;
+      
+      // Safely parse JSON in case a legacy model wrapped it in markdown code blocks
+      let parsedJson;
+      try {
+        parsedJson = JSON.parse(contentString);
+      } catch (e) {
+        // Strip out any markdown formatting if the model didn't strictly follow JSON-only
+        const cleanedString = contentString.replace(/```json/gi, '').replace(/```/g, '').trim();
+        parsedJson = JSON.parse(cleanedString);
+      }
+
+      // Validate that the AI actually returned the expected schema structure
+      if (!parsedJson || !parsedJson.summary || !parsedJson.whyThisScore) {
+        throw new Error("AI returned malformed JSON missing required fields.");
+      }
+
+      return parsedJson;
     } catch (err) {
       console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
       console.error(`[GROQ] Error message: ${err.message}`);
