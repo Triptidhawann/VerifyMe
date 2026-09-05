@@ -376,49 +376,57 @@ Return your JSON assessment now.`;
     let whyThisScore = "";
     let recommendedAction = "";
     
-    // 1. Generate Summary
-    if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
-      summary = "Multiple technical risk indicators were detected.";
-    } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
-      summary = "Some verification signals require additional review.";
-    } else {
-      summary = "No major technical risk indicators were detected.";
-    }
+    const risk = (riskLevel || '').toUpperCase();
+    const isHighRisk = risk.includes('CRITICAL') || risk.includes('HIGH');
+    const isModerateRisk = risk.includes('MODERATE') || risk.includes('SUSPICIOUS');
 
-    // 2. Generate Explanation based on ACTUAL signals
-    if (warnings.length > 0) {
-      whyThisScore = `The technical verification identified the following concerns: ${warnings.join('; ')}. `;
+    const warningsText = warnings.length > 0 
+      ? `The technical verification identified the following concerns: ${warnings.join('; ')}.`
+      : `The available technical checks did not identify explicit red flags, but the overall signal profile requires caution.`;
+
+    // SINGLE UNIFIED DECISION TREE: Guarantees no contradictions
+    if (isHighRisk) {
+      summary = "Multiple technical risk indicators require caution.";
+      whyThisScore = warnings.length > 0 
+        ? warningsText
+        : "Several technical signals indicate a high probability of risk, even though specific warning flags were not categorized.";
+        
+      if (type === 'email') {
+        recommendedAction = "Do not rely on this address. Avoid sharing sensitive information, credentials, or making payments until independently verified.";
+      } else if (type === 'phone') {
+        recommendedAction = "Do not share OTPs, passwords, financial information, or sensitive personal data until the caller's identity is independently verified.";
+      } else { // website or generic
+        recommendedAction = "Avoid sharing passwords, OTPs, payment information, or other sensitive data until the target has been independently verified.";
+      }
+      
+    } else if (isModerateRisk) {
+      summary = "Some verification signals require additional review.";
+      whyThisScore = warnings.length > 0 
+        ? warningsText
+        : "The available checks did not fail outright, but the verification signals lack sufficient trust indicators to guarantee safety.";
+        
+      if (type === 'email') {
+        recommendedAction = "Verify the sender through an independent channel before sharing credentials, OTPs, financial information, or sensitive documents.";
+      } else if (type === 'phone') {
+        recommendedAction = "Treat this number with caution. Independently verify the caller before sharing sensitive information or taking an important action.";
+      } else { // website or generic
+        recommendedAction = "Exercise caution. Verify the target through an independent source before sharing sensitive information or taking an important action.";
+      }
+      
     } else {
-      whyThisScore = `The available technical checks did not identify significant warning signs. `;
-    }
-    
-    // 3. Generate Specific Recommendations
-    if (type === 'email') {
-      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
-        recommendedAction = "Do not rely on this address. Avoid sharing sensitive information or making payments until independently verified.";
-      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
-        recommendedAction = "Treat this address with caution and verify the sender through an independent communication channel.";
-      } else {
-        recommendedAction = "No major technical email configuration issues were detected. This does not confirm that the mailbox owner is legitimate, so verify the sender before sharing sensitive information.";
+      // LOW RISK
+      summary = "No major technical risk indicators were detected in the available checks.";
+      whyThisScore = warnings.length > 0 
+        ? `The technical verification passed overall, but noted minor observations: ${warnings.join('; ')}.`
+        : "The available technical checks passed without identifying significant warning signs.";
+        
+      if (type === 'email') {
+        recommendedAction = "No major technical email configuration issues were detected. Proceed with normal caution and verify the sender before sharing sensitive information.";
+      } else if (type === 'phone') {
+        recommendedAction = "The number passed available technical checks. Proceed with normal caution and verify the caller through an independent channel before taking sensitive action.";
+      } else { // website or generic
+        recommendedAction = "Proceed with normal caution. Before sharing sensitive information, verify the identity or organization through an independent source.";
       }
-    } else if (type === 'phone') {
-      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
-        recommendedAction = "Do not share OTPs, passwords, financial information, or other sensitive data until the caller's identity is independently verified.";
-      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
-        recommendedAction = "Treat this number with caution. Independently verify the caller before sharing sensitive information.";
-      } else {
-        recommendedAction = "The number passed available technical checks, but technical validation does not prove who controls the number. Verify the caller through an independent channel before taking sensitive action.";
-      }
-    } else if (type === 'website') {
-      if (riskLevel.includes('CRITICAL') || riskLevel.includes('HIGH')) {
-        recommendedAction = "Do not enter passwords, payment information, OTPs, or other sensitive data on this website.";
-      } else if (riskLevel.includes('MODERATE') || riskLevel.includes('SUSPICIOUS')) {
-        recommendedAction = "Exercise caution. Do not submit sensitive data until the website and organization are independently verified.";
-      } else {
-        recommendedAction = "The available technical checks did not identify major issues, but technical validation does not guarantee that the website or organization is legitimate.";
-      }
-    } else {
-      recommendedAction = "Proceed with normal caution and verify identity through an independent source.";
     }
 
     return {
