@@ -344,7 +344,14 @@ Return your JSON assessment now.`;
         throw new Error("AI returned malformed JSON missing required fields.");
       }
 
-      return parsedJson;
+      return {
+        technicalAssessment: {
+          summary: parsedJson.summary,
+          explanation: parsedJson.whyThisScore,
+          recommendedAction: parsedJson.recommendedAction
+        },
+        aiAvailable: true
+      };
     } catch (err) {
       console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
       console.error(`[GROQ] Error message: ${err.message}`);
@@ -373,7 +380,7 @@ Return your JSON assessment now.`;
     const { riskLevel, warnings = [] } = deterministicData;
     
     let summary = "";
-    let whyThisScore = "";
+    let explanation = "";
     let recommendedAction = "";
     
     const risk = (riskLevel || '').toUpperCase();
@@ -386,24 +393,24 @@ Return your JSON assessment now.`;
 
     // SINGLE UNIFIED DECISION TREE: Guarantees no contradictions
     if (isHighRisk) {
-      summary = "Multiple technical risk indicators require caution.";
-      whyThisScore = warnings.length > 0 
+      summary = "Multiple verification signals indicate elevated risk.";
+      explanation = warnings.length > 0 
         ? warningsText
-        : "Several technical signals indicate a high probability of risk, even though specific warning flags were not categorized.";
+        : "The available technical checks identified risk indicators that require significant caution.";
         
       if (type === 'email') {
-        recommendedAction = "Do not rely on this address. Avoid sharing sensitive information, credentials, or making payments until independently verified.";
+        recommendedAction = "Independently verify the sender before sharing credentials, OTPs, financial information, or sensitive documents.";
       } else if (type === 'phone') {
-        recommendedAction = "Do not share OTPs, passwords, financial information, or sensitive personal data until the caller's identity is independently verified.";
+        recommendedAction = "Independently verify the caller before sharing OTPs, passwords, financial information, or sensitive personal data.";
       } else { // website or generic
-        recommendedAction = "Avoid sharing passwords, OTPs, payment information, or other sensitive data until the target has been independently verified.";
+        recommendedAction = "Independently verify the website and organization before entering credentials, payment information, or other sensitive data.";
       }
       
     } else if (isModerateRisk) {
       summary = "Some verification signals require additional review.";
-      whyThisScore = warnings.length > 0 
+      explanation = warnings.length > 0 
         ? warningsText
-        : "The available checks did not fail outright, but the verification signals lack sufficient trust indicators to guarantee safety.";
+        : "One or more available verification signals require additional attention. Review the identified signals before trusting the target or taking a sensitive action.";
         
       if (type === 'email') {
         recommendedAction = "Verify the sender through an independent channel before sharing credentials, OTPs, financial information, or sensitive documents.";
@@ -416,24 +423,26 @@ Return your JSON assessment now.`;
     } else {
       // LOW RISK
       summary = "No major technical risk indicators were detected in the available checks.";
-      whyThisScore = warnings.length > 0 
+      explanation = warnings.length > 0 
         ? `The technical verification passed overall, but noted minor observations: ${warnings.join('; ')}.`
-        : "The available technical checks passed without identifying significant warning signs.";
+        : "The available technical verification signals did not identify significant warning signs. This assessment reflects the checks currently available to VerifyMe and is not a guarantee of safety.";
         
       if (type === 'email') {
-        recommendedAction = "No major technical email configuration issues were detected. Proceed with normal caution and verify the sender before sharing sensitive information.";
+        recommendedAction = "Proceed with normal caution and verify the sender before sharing sensitive information.";
       } else if (type === 'phone') {
-        recommendedAction = "The number passed available technical checks. Proceed with normal caution and verify the caller through an independent channel before taking sensitive action.";
+        recommendedAction = "Proceed with normal caution and verify the caller through an independent channel before taking sensitive action.";
       } else { // website or generic
         recommendedAction = "Proceed with normal caution. Before sharing sensitive information, verify the identity or organization through an independent source.";
       }
     }
 
     return {
-      summary: summary,
-      whyThisScore: whyThisScore + "\n\n(Note: AI interpretation is temporarily unavailable. This assessment is based purely on the deterministic technical verification signals.)",
-      verdict: "Technical Assessment",
-      recommendedAction: recommendedAction
+      technicalAssessment: {
+        summary: summary,
+        explanation: explanation,
+        recommendedAction: recommendedAction
+      },
+      aiAvailable: false
     };
   }
 };
@@ -450,14 +459,16 @@ const performVerification = async (type, normalizedInput) => {
     score: deterministicData.score,
     riskLevel: deterministicData.riskLevel,
     confidence: deterministicData.confidence,
-    summary: aiResult.summary,
-    whyThisScore: aiResult.whyThisScore || "N/A",
-    verdict: aiResult.verdict,
-    recommendedAction: aiResult.recommendedAction,
+    technicalAssessment: aiResult.technicalAssessment,
+    aiAvailable: aiResult.aiAvailable,
+    // Provide safe defaults for legacy UI to prevent crashing while waiting for frontend update
+    summary: aiResult.technicalAssessment?.summary || "",
+    whyThisScore: aiResult.technicalAssessment?.explanation || "",
+    recommendedAction: aiResult.technicalAssessment?.recommendedAction || "",
     signals: deterministicData.signals,
     warnings: deterministicData.warnings,
     limitations: deterministicData.limitations,
-    analysisType: "deterministic + AI"
+    analysisType: aiResult.aiAvailable ? "deterministic + AI" : "deterministic fallback"
   };
 };
 

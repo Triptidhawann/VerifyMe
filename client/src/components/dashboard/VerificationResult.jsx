@@ -74,15 +74,54 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
       <div className="result-body">
         <div className="result-summary-panel">
           <h4>WHY THIS SCORE?</h4>
-          {result.verdict && <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>{result.verdict}</p>}
-          {result.whyThisScore && <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>{result.whyThisScore}</p>}
-          <p style={{ color: 'var(--text-secondary)' }}>{result.summary}</p>
           
-          {result.recommendedAction && (
-            <div className="recommended-action-box">
-              <strong>Recommended Action</strong>
-              <span>{result.recommendedAction}</span>
-            </div>
+          {result.technicalAssessment ? (
+            <>
+              {result.aiAvailable === false ? (
+                <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>Technical Assessment</p>
+              ) : (
+                result.verdict && <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>{result.verdict}</p>
+              )}
+              
+              {result.technicalAssessment.summary && (
+                <p style={{ color: 'var(--text-primary)', fontWeight: '500', marginBottom: '8px' }}>
+                  {result.technicalAssessment.summary}
+                </p>
+              )}
+              
+              {result.technicalAssessment.explanation && (
+                <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
+                  {result.technicalAssessment.explanation}
+                </p>
+              )}
+              
+              {result.aiAvailable === false && (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '16px', borderLeft: '3px solid var(--border-color)', paddingLeft: '8px' }}>
+                  AI interpretation is temporarily unavailable. This assessment is based on technical verification signals.
+                </p>
+              )}
+              
+              {result.technicalAssessment.recommendedAction && (
+                <div className="recommended-action-box">
+                  <strong>Recommended Action</strong>
+                  <span>{result.technicalAssessment.recommendedAction}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            /* LEGACY FALLBACK FOR OLD HISTORY RECORDS */
+            <>
+              {result.verdict && <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>{result.verdict}</p>}
+              {result.whyThisScore && <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>{result.whyThisScore}</p>}
+              <p style={{ color: 'var(--text-secondary)' }}>{result.summary}</p>
+              
+              {result.recommendedAction && (
+                <div className="recommended-action-box">
+                  <strong>Recommended Action</strong>
+                  <span>{result.recommendedAction}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
