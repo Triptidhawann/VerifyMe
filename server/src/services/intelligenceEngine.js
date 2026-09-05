@@ -287,50 +287,13 @@ External Threat Intelligence: UNAVAILABLE
 
 Return your JSON assessment now.`;
 
-  // Dynamically discover which models the user's specific account has access to
-  const getAvailableModel = async () => {
-    try {
-      const response = await fetch("https://api.groq.com/openai/v1/models", {
-        headers: { "Authorization": `Bearer ${process.env.GROQ_API_KEY}` }
-      });
-      const data = await response.json();
-      
-      if (data && data.data) {
-        const availableModels = data.data.map(m => m.id);
-        console.log("[GROQ] Account has access to models:", availableModels.join(", "));
-        
-        // Priority list
-        const preferences = [
-          'llama-3.3-70b-versatile', 
-          'llama-3.1-8b-instant', 
-          'llama3-8b-8192', 
-          'llama3-70b-8192'
-        ];
-        
-        for (const pref of preferences) {
-          if (availableModels.includes(pref)) {
-            return pref;
-          }
-        }
-        
-        // If preferred models aren't available, pick the first Llama model they have access to
-        const anyLlama = availableModels.find(m => m.toLowerCase().includes('llama'));
-        if (anyLlama) return anyLlama;
-      }
-    } catch (e) {
-      console.warn("[GROQ] Failed to fetch available models", e.message);
-    }
-    // Absolute last resort
-    return 'llama3-8b-8192';
-  };
-
   const makeGroqRequest = async (retries = 2) => {
     try {
       console.log('[GROQ] Request started');
       console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
       
-      // Get a guaranteed working model for this specific account
-      const targetModel = await getAvailableModel();
+      // Use a strict, universally available Chat Completions model that supports JSON
+      const targetModel = 'mixtral-8x7b-32768';
       console.log(`[GROQ] Selected Model: ${targetModel}`);
       
       console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
@@ -351,14 +314,9 @@ Return your JSON assessment now.`;
           { role: 'user', content: userPrompt }
         ],
         model: targetModel,
-        temperature: 0.1
+        temperature: 0.1,
+        response_format: { type: "json_object" }
       };
-
-      // Only attach strict JSON mode to modern models that explicitly support it in the Groq API
-      const supportsJsonMode = targetModel.includes('3.1') || targetModel.includes('3.3') || targetModel.includes('mixtral');
-      if (supportsJsonMode) {
-        payload.response_format = { type: "json_object" };
-      }
 
       const groqPromise = groq.chat.completions.create(payload);
 
@@ -368,17 +326,15 @@ Return your JSON assessment now.`;
 
       const contentString = chatCompletion.choices[0].message.content;
       
-      // Safely parse JSON in case a legacy model wrapped it in markdown code blocks
+      // Safely parse JSON 
       let parsedJson;
       try {
         parsedJson = JSON.parse(contentString);
       } catch (e) {
-        // Strip out any markdown formatting if the model didn't strictly follow JSON-only
         const cleanedString = contentString.replace(/```json/gi, '').replace(/```/g, '').trim();
         parsedJson = JSON.parse(cleanedString);
       }
 
-      // Validate that the AI actually returned the expected schema structure
       if (!parsedJson || !parsedJson.summary || !parsedJson.whyThisScore) {
         throw new Error("AI returned malformed JSON missing required fields.");
       }
@@ -388,7 +344,7 @@ Return your JSON assessment now.`;
       console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
       console.error(`[GROQ] Error message: ${err.message}`);
 
-      // Retry on rate limit, timeout, or server errors, but NOT on auth errors
+      // Retry on rate limit, timeout, or server errors, but NOT on auth errors or config errors
       const isRetryable = err.message.includes('timed out') || 
                           err.status === 429 || 
                           (err.status >= 500 && err.status <= 599);
@@ -407,12 +363,27 @@ Return your JSON assessment now.`;
     return await makeGroqRequest();
   } catch (err) {
     console.log(`[GROQ] Final failure reached. Forwarding error to UI.`);
-    // Fallback if Groq completely fails, now WITH the exact error message for debugging
+    
+    let whyThisScore = "AI interpretation could not be generated.";
+    const status = err.status || 500;
+    
+    if (status === 401 || status === 403) {
+      whyThisScore = "Groq authentication failed. Please check the API key.";
+    } else if (status === 400) {
+      whyThisScore = "Groq request configuration error (e.g., unsupported model or payload).";
+    } else if (status === 429) {
+      whyThisScore = "Groq rate limit reached. Please try again later.";
+    } else if (status === 408) {
+      whyThisScore = "Groq request timed out.";
+    } else if (status >= 500) {
+      whyThisScore = "Groq service temporarily unavailable.";
+    }
+
     return {
       summary: `AI interpretation failed: ${err.message}`,
-      whyThisScore: `Error Code: ${err.status || 'Unknown'}. Please ensure GROQ_API_KEY is valid and the model is supported.`,
+      whyThisScore: whyThisScore,
       verdict: "AI Analysis Incomplete.",
-      recommendedAction: "Fix the Groq integration error shown above."
+      recommendedAction: "Review the technical signals and proceed with extreme caution."
     };
   }
 };
