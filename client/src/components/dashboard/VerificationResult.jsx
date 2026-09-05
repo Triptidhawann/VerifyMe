@@ -1,38 +1,51 @@
 import React from 'react';
-import { Shield, ShieldAlert, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Activity, Database, Fingerprint } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Activity, Database, Fingerprint, Sparkles, Server } from 'lucide-react';
 import './VerificationResult.css';
 
 const VerificationResult = ({ result, onVerifyAnother }) => {
   if (!result) return null;
 
-  const isLowRisk = result.riskLevel === 'LOW RISK';
-  const isHighRisk = result.riskLevel === 'HIGH RISK';
+  // Use the new payload structure if available, otherwise fallback to root legacy fields
+  const verification = result.verification || result;
+  const analysis = result.analysis || {
+    source: 'legacy',
+    summary: result.summary,
+    whyScore: result.whyThisScore ? [result.whyThisScore] : [],
+    riskFactors: result.warnings || [],
+    precautions: [],
+    recommendedAction: result.recommendedAction
+  };
+
+  const isLowRisk = verification.riskLevel === 'LOW RISK';
+  const isHighRisk = verification.riskLevel === 'HIGH RISK';
   
   const StatusIcon = isLowRisk ? ShieldCheck : (isHighRisk ? ShieldAlert : Shield);
   const statusColor = isLowRisk ? 'var(--success-color, #10b981)' : (isHighRisk ? 'var(--danger-color, #ef4444)' : 'var(--warning-color, #f59e0b)');
 
-  // Count metrics based on the result arrays
-  const signalsAnalyzed = result.signals.length + result.warnings.length + 2; // +2 base deterministic rules
-  const evidenceChecked = result.signals.length;
-  const riskIndicators = result.warnings.length;
+  // Extract precise metrics
+  const signalsAnalyzed = verification.signalsAnalyzed || (verification.signals?.length || 0) + (verification.warnings?.length || 0) + 2;
+  const evidenceChecked = verification.evidenceChecked || (verification.signals?.length || 0);
+  const riskIndicators = verification.riskIndicators || (verification.warnings?.length || 0);
+  const targetType = verification.targetType || verification.type || 'TARGET';
+  const targetValue = verification.targetValue || verification.inputValue || '';
 
   return (
     <div className="result-container fadeIn">
       <div className="result-header-label">VERIFICATION RESULT</div>
       <div className="result-header">
         <div className="result-entity">
-          <span className="entity-type">{result.type.toUpperCase()} TARGET</span>
-          <span className="entity-value">{result.inputValue}</span>
+          <span className="entity-type">{targetType.toUpperCase()}</span>
+          <span className="entity-value">{targetValue}</span>
         </div>
         
         <div className="result-score-badge" style={{ borderColor: statusColor, color: statusColor }}>
           <div className="score-main">
-            <span className="score-value">{result.score}</span>
+            <span className="score-value">{verification.score}</span>
             <span className="score-max">/100</span>
           </div>
           <div className="risk-label">
             <StatusIcon size={14} style={{ marginRight: '4px', verticalAlign: 'text-bottom' }} />
-            {result.riskLevel}
+            {verification.riskLevel}
           </div>
         </div>
       </div>
@@ -65,7 +78,7 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
           <div className="metric-data">
             <span className="metric-label">CONFIDENCE</span>
             <span className="metric-value">
-              {typeof result.confidence === 'number' ? `${result.confidence}%` : String(result.confidence || '0%').toUpperCase()}
+              {typeof verification.confidence === 'number' ? `${verification.confidence}%` : String(verification.confidence || '0%').toUpperCase()}
             </span>
           </div>
         </div>
@@ -75,54 +88,57 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
         <div className="result-summary-panel">
           <h4>WHY THIS SCORE?</h4>
           
-          {result.technicalAssessment ? (
-            <>
-              {result.aiAvailable === false ? (
-                <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>Technical Assessment</p>
-              ) : (
-                result.verdict && <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>{result.verdict}</p>
-              )}
-              
-              {result.technicalAssessment.summary && (
-                <p style={{ color: 'var(--text-primary)', fontWeight: '500', marginBottom: '8px' }}>
-                  {result.technicalAssessment.summary}
-                </p>
-              )}
-              
-              {result.technicalAssessment.explanation && (
-                <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-                  {result.technicalAssessment.explanation}
-                </p>
-              )}
-              
-              {result.aiAvailable === false && (
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '16px', borderLeft: '3px solid var(--border-color)', paddingLeft: '8px' }}>
-                  AI interpretation is temporarily unavailable. This assessment is based on technical verification signals.
-                </p>
-              )}
-              
-              {result.technicalAssessment.recommendedAction && (
-                <div className="recommended-action-box">
-                  <strong>Recommended Action</strong>
-                  <span>{result.technicalAssessment.recommendedAction}</span>
-                </div>
-              )}
-            </>
-          ) : (
-            /* LEGACY FALLBACK FOR OLD HISTORY RECORDS */
-            <>
-              {result.verdict && <p style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: '8px', fontSize: '1.05rem' }}>{result.verdict}</p>}
-              {result.whyThisScore && <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>{result.whyThisScore}</p>}
-              <p style={{ color: 'var(--text-secondary)' }}>{result.summary}</p>
-              
-              {result.recommendedAction && (
-                <div className="recommended-action-box">
-                  <strong>Recommended Action</strong>
-                  <span>{result.recommendedAction}</span>
-                </div>
-              )}
-            </>
+          <div className="analysis-source-indicator" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            {analysis.source === 'ai' ? (
+              <><Sparkles size={14} style={{ color: 'var(--primary-color)' }}/> AI-assisted interpretation</>
+            ) : (
+              <><Server size={14} /> Based on available verification signals</>
+            )}
+          </div>
+          
+          {analysis.summary && (
+            <p style={{ color: 'var(--text-primary)', fontWeight: '500', marginBottom: '16px', fontSize: '1.05rem' }}>
+              {analysis.summary}
+            </p>
           )}
+          
+          {analysis.whyScore && analysis.whyScore.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Key Findings:</strong>
+              <ul style={{ paddingLeft: '20px', margin: 0, color: 'var(--text-secondary)' }}>
+                {analysis.whyScore.map((reason, i) => <li key={`why-${i}`}>{reason}</li>)}
+              </ul>
+            </div>
+          )}
+          
+          {analysis.riskFactors && analysis.riskFactors.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ display: 'block', marginBottom: '8px', color: 'var(--danger-color, #ef4444)' }}>Risk Factors:</strong>
+              <ul style={{ paddingLeft: '20px', margin: 0, color: 'var(--text-secondary)' }}>
+                {analysis.riskFactors.map((factor, i) => <li key={`risk-${i}`}>{factor}</li>)}
+              </ul>
+            </div>
+          )}
+          
+          {analysis.precautions && analysis.precautions.length > 0 && (
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ display: 'block', marginBottom: '8px', color: 'var(--text-primary)' }}>Precautions:</strong>
+              <ul style={{ paddingLeft: '20px', margin: 0, color: 'var(--text-secondary)' }}>
+                {analysis.precautions.map((precaution, i) => <li key={`prec-${i}`}>{precaution}</li>)}
+              </ul>
+            </div>
+          )}
+          
+          {analysis.recommendedAction && (
+            <div className="recommended-action-box" style={{ marginTop: '24px' }}>
+              <strong>Recommended Action</strong>
+              <span>{analysis.recommendedAction}</span>
+            </div>
+          )}
+          
+          <div style={{ marginTop: '32px', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+            VerifyMe provides technical trust signals, not a guarantee of identity, legitimacy, or safety.
+          </div>
         </div>
 
         <div className="result-panel full-width">

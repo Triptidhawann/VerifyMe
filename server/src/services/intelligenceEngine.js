@@ -246,92 +246,179 @@ const getDeterministicSignals = async (type, normalizedInput) => {
 };
 
 // ---------------------------------------------------------
+// DETERMINISTIC INTERPRETATION (FALLBACK)
+// ---------------------------------------------------------
+const generateDeterministicInterpretation = (deterministicData, type) => {
+  const { riskLevel, warnings = [], signals = [] } = deterministicData;
+  const risk = (riskLevel || '').toUpperCase();
+  const isHighRisk = risk.includes('CRITICAL') || risk.includes('HIGH');
+  const isModerateRisk = risk.includes('MODERATE') || risk.includes('SUSPICIOUS');
+
+  let summary = "";
+  let whyScore = [];
+  let riskFactors = [...warnings];
+  let precautions = [];
+  let recommendedAction = "";
+
+  if (isHighRisk) {
+    summary = "The verification result contains warning indicators that reduce confidence in the target.";
+    whyScore.push("Several technical signals indicate a high probability of risk.");
+    if (warnings.length > 0) {
+      whyScore.push(`Explicit warnings detected: ${warnings.join('; ')}.`);
+    }
+
+    if (type === 'email') {
+      precautions = [
+        "Do not open suspicious attachments.",
+        "Do not provide credentials through email links.",
+        "Treat the message as potentially unsafe."
+      ];
+      recommendedAction = "Independently verify the sender before interacting with the email.";
+    } else if (type === 'phone') {
+      precautions = [
+        "Do not share OTPs, PINs, or financial information.",
+        "Be cautious of urgent or threatening requests.",
+        "Stop the interaction if pressure continues."
+      ];
+      recommendedAction = "Do not rely on the caller's identity alone. Independently verify the caller before taking any sensitive action.";
+    } else {
+      precautions = [
+        "Do not enter credentials or payment information.",
+        "Avoid downloading files from this domain.",
+        "Check the domain spelling carefully."
+      ];
+      recommendedAction = "Do not interact with this website until it is independently verified.";
+    }
+  } else if (isModerateRisk) {
+    summary = "The available verification signals show a mixed result. Some indicators are reassuring, but the available evidence is not strong enough to establish high confidence.";
+    whyScore.push("Technical checks passed without explicit critical failures, but trust indicators are low.");
+    if (warnings.length > 0) {
+      whyScore.push(`Minor concerns noted: ${warnings.join('; ')}.`);
+    }
+
+    if (type === 'email') {
+      precautions = [
+        "Avoid sharing sensitive information.",
+        "Verify the sender/domain independently.",
+        "Confirm important claims using an official source."
+      ];
+      recommendedAction = "Verify the sender through an independent channel before sharing credentials or financial details.";
+    } else if (type === 'phone') {
+      precautions = [
+        "Independently verify the caller's identity.",
+        "Do not share sensitive information or OTPs.",
+        "Look for additional evidence before taking action."
+      ];
+      recommendedAction = "Verify the caller through an independent channel before sharing sensitive information, OTPs, or financial details.";
+    } else {
+      precautions = [
+        "Avoid entering sensitive information.",
+        "Verify the organization through its official website.",
+        "Look for additional security indicators."
+      ];
+      recommendedAction = "Independently verify the website and organization before entering credentials or payment information.";
+    }
+  } else {
+    // LOW RISK
+    summary = "The verification signals currently available do not show significant warning indicators. However, the available evidence should still be independently verified before making a sensitive decision.";
+    whyScore.push("The target passed all available formatting and structural verification checks.");
+    whyScore.push(`Confirmed positive signals: ${signals.length}.`);
+
+    if (type === 'email') {
+      precautions = [
+        "Treat the score as an indicator, not absolute proof.",
+        "Continue to use normal caution.",
+        "Confirm the identity through an independent channel if the request is sensitive."
+      ];
+      recommendedAction = "Verify the sender before sharing sensitive information.";
+    } else if (type === 'phone') {
+      precautions = [
+        "Treat the score as an indicator, not absolute proof.",
+        "Continue to use normal caution.",
+        "Confirm the identity through an independent channel if the request is sensitive."
+      ];
+      recommendedAction = "Independently verify the caller before sharing sensitive information.";
+    } else {
+      precautions = [
+        "Treat the score as an indicator, not absolute proof.",
+        "Continue to use normal caution.",
+        "Confirm the identity through an independent channel if the request is sensitive."
+      ];
+      recommendedAction = "Verify the organization before entering sensitive information.";
+    }
+  }
+
+  return {
+    source: "deterministic",
+    summary,
+    whyScore,
+    riskFactors,
+    precautions,
+    recommendedAction
+  };
+};
+
+// ---------------------------------------------------------
 // GROQ AI INTERPRETATION
 // ---------------------------------------------------------
-const callGroqAPI = async (type, normalizedInput, deterministicData) => {
-  const systemPrompt = `You are the explanation layer of VerifyMe, a Digital Trust Intelligence platform.
-You are NOT the source of truth. You must only interpret the verification evidence supplied to you by the backend.
+const generateRiskInterpretation = async (type, normalizedInput, deterministicData) => {
+  const fallback = generateDeterministicInterpretation(deterministicData, type);
 
-CRITICAL RULES:
-1. Never invent facts, reputation information, database results, security incidents, ownership, or threat intelligence.
-2. Never assume that valid syntax means trustworthy. Valid syntax ONLY means the format is correct.
-3. Distinguish clearly between VALID, VERIFIED, TRUSTED, UNVERIFIED, SUSPICIOUS, HIGH RISK.
-4. If external intelligence or reputation data is unavailable, explicitly state that the assessment is limited.
-5. Do not claim that an email mailbox exists unless mailbox existence was actually verified.
-6. Do not claim that a phone number belongs to a person unless ownership was actually verified.
-7. Do not claim that a website is safe merely because it uses HTTPS or responds to a ping.
-8. Explain why the numerical score was produced based ONLY on the supplied evidence.
+  if (!process.env.GROQ_API_KEY) {
+    console.log('[GROQ] No API key found. Using deterministic fallback.');
+    return fallback;
+  }
 
-Always output ONLY valid JSON matching this schema exactly:
-{
-  "summary": "Brief 2-sentence explanation of what the evidence suggests about the target",
-  "whyThisScore": "A clear explanation of why this specific score (out of 100) was given, pointing out positive and negative signals",
-  "verdict": "One short sentence final verdict (e.g., 'Entity appears valid but lacks reputation history.')",
-  "recommendedAction": "Actionable, cautious advice for the user based on the risk level"
-}`;
-
-  const userPrompt = `
-Analyze this target:
+  const prompt = `You are the explanation layer of VerifyMe. 
+Explain this deterministic verification result.
 Target Type: ${type}
 Target Value: ${normalizedInput}
-
-Calculated Score: ${deterministicData.score}/100
+Score: ${deterministicData.score}/100
 Risk Level: ${deterministicData.riskLevel}
-Evidence Confidence: ${deterministicData.confidence}%
+Signals Analyzed: ${JSON.stringify(deterministicData.signals)}
+Warnings: ${JSON.stringify(deterministicData.warnings)}
 
-Validation Status: ${deterministicData.formatValid ? 'Valid Format' : 'Invalid Format'}
-Positive Signals Checked: ${JSON.stringify(deterministicData.signals)}
-Negative Warnings/Risks: ${JSON.stringify(deterministicData.warnings)}
-Known Limitations: ${JSON.stringify(deterministicData.limitations)}
-External Threat Intelligence: UNAVAILABLE
+CRITICAL RULES:
+1. DO NOT change the score or risk level. You are only explaining why the technical checks resulted in them.
+2. Produce target-aware precautions (email vs phone vs website).
+3. Do not invent external reputation facts not present in the signals or warnings arrays.
+4. Provide the exact JSON structure requested.
 
-Return your JSON assessment now.`;
+Return valid JSON exactly matching this schema:
+{
+  "summary": "1-2 sentence overview of the risk",
+  "whyScore": ["reason 1", "reason 2"],
+  "riskFactors": ["factor 1", "factor 2"],
+  "precautions": ["precaution 1", "precaution 2", "precaution 3"],
+  "recommendedAction": "1 clear sentence of advice"
+}`;
 
-  const makeGroqRequest = async (retries = 2) => {
+  const makeGroqRequest = async (retries = 1) => {
     try {
-      console.log('[GROQ] Request started');
-      console.log(`[GROQ] API key configured: ${!!process.env.GROQ_API_KEY}`);
-      
-      // Use a configurable model with a highly compatible legacy fallback
       const targetModel = process.env.GROQ_MODEL || 'llama3-8b-8192';
-      console.log(`[GROQ] Selected Model: ${targetModel}`);
       
-      console.log(`[GROQ] Endpoint: https://api.groq.com/openai/v1/chat/completions`);
-      console.log(`[GROQ] Request started at: ${new Date().toISOString()}`);
-      
-      // Implement a race condition for a 8-second timeout
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => {
-          const timeoutErr = new Error('Groq request timed out');
-          timeoutErr.status = 408;
-          reject(timeoutErr);
-        }, 8000)
+        setTimeout(() => { const e = new Error('Timeout'); e.status = 408; reject(e); }, 8000)
       );
 
       const payload = {
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        messages: [{ role: 'user', content: prompt }],
         model: targetModel,
         temperature: 0.1
       };
 
-      // Only modern models explicitly support strict JSON mode. Legacy models (like llama3-8b-8192) will crash if this is passed.
-      const supportsJsonMode = targetModel.includes('3.1') || targetModel.includes('3.3') || targetModel.includes('mixtral');
-      if (supportsJsonMode) {
+      // Only attempt JSON mode if the model explicitly supports it without crashing
+      if (targetModel.includes('3.1') || targetModel.includes('3.3')) {
         payload.response_format = { type: "json_object" };
       }
 
-      const groqPromise = groq.chat.completions.create(payload);
-
-      const chatCompletion = await Promise.race([groqPromise, timeoutPromise]);
-      console.log(`[GROQ] Response status: 200`);
-      console.log(`[GROQ] Parsed successfully: true`);
+      const chatCompletion = await Promise.race([
+        groq.chat.completions.create(payload),
+        timeoutPromise
+      ]);
 
       const contentString = chatCompletion.choices[0].message.content;
       
-      // Safely parse JSON 
       let parsedJson;
       try {
         parsedJson = JSON.parse(contentString);
@@ -340,135 +427,63 @@ Return your JSON assessment now.`;
         parsedJson = JSON.parse(cleanedString);
       }
 
-      if (!parsedJson || !parsedJson.summary || !parsedJson.whyThisScore) {
-        throw new Error("AI returned malformed JSON missing required fields.");
+      if (!parsedJson || !Array.isArray(parsedJson.precautions)) {
+        throw new Error("Malformed JSON missing required arrays.");
       }
 
       return {
-        technicalAssessment: {
-          summary: parsedJson.summary,
-          explanation: parsedJson.whyThisScore,
-          recommendedAction: parsedJson.recommendedAction
-        },
-        aiAvailable: true
+        source: "ai",
+        summary: parsedJson.summary || fallback.summary,
+        whyScore: Array.isArray(parsedJson.whyScore) ? parsedJson.whyScore : fallback.whyScore,
+        riskFactors: Array.isArray(parsedJson.riskFactors) ? parsedJson.riskFactors : fallback.riskFactors,
+        precautions: parsedJson.precautions,
+        recommendedAction: parsedJson.recommendedAction || fallback.recommendedAction
       };
     } catch (err) {
-      console.error(`[GROQ] Error status: ${err.status || 'unknown'}`);
-      console.error(`[GROQ] Error message: ${err.message}`);
-
-      // Retry on rate limit, timeout, or server errors, but NOT on auth errors or config errors
-      const isRetryable = err.message.includes('timed out') || 
-                          err.status === 429 || 
-                          (err.status >= 500 && err.status <= 599);
-
+      console.error(`[GROQ_ERROR] provider=groq stage=request status=${err.status || 'unknown'} fallback=deterministic`);
+      
+      const isRetryable = err.message.includes('Timeout') || err.status === 429 || (err.status >= 500 && err.status <= 599);
       if (isRetryable && retries > 0) {
-        console.log(`[GROQ] Retrying Groq request... (${retries} left)`);
         await new Promise(resolve => setTimeout(resolve, 1500));
         return makeGroqRequest(retries - 1);
       }
-      
-      throw err; // Let the outer catch handle the final fallback
+      return fallback;
     }
   };
 
-  try {
-    return await makeGroqRequest();
-  } catch (err) {
-    console.log(`[GROQ] Final failure reached. Generating deterministic technical fallback.`);
-    
-    // Deterministic Fallback Logic based strictly on actual technical signals
-    const { riskLevel, warnings = [] } = deterministicData;
-    
-    let summary = "";
-    let explanation = "";
-    let recommendedAction = "";
-    
-    const risk = (riskLevel || '').toUpperCase();
-    const isHighRisk = risk.includes('CRITICAL') || risk.includes('HIGH');
-    const isModerateRisk = risk.includes('MODERATE') || risk.includes('SUSPICIOUS');
-
-    const warningsText = warnings.length > 0 
-      ? `The technical verification identified the following concerns: ${warnings.join('; ')}.`
-      : `The available technical checks did not identify explicit red flags, but the overall signal profile requires caution.`;
-
-    // SINGLE UNIFIED DECISION TREE: Guarantees no contradictions
-    if (isHighRisk) {
-      summary = "Multiple verification signals indicate elevated risk.";
-      explanation = warnings.length > 0 
-        ? warningsText
-        : "The available technical checks identified risk indicators that require significant caution.";
-        
-      if (type === 'email') {
-        recommendedAction = "Independently verify the sender before sharing credentials, OTPs, financial information, or sensitive documents.";
-      } else if (type === 'phone') {
-        recommendedAction = "Independently verify the caller before sharing OTPs, passwords, financial information, or sensitive personal data.";
-      } else { // website or generic
-        recommendedAction = "Independently verify the website and organization before entering credentials, payment information, or other sensitive data.";
-      }
-      
-    } else if (isModerateRisk) {
-      summary = "Some verification signals require additional review.";
-      explanation = warnings.length > 0 
-        ? warningsText
-        : "One or more available verification signals require additional attention. Review the identified signals before trusting the target or taking a sensitive action.";
-        
-      if (type === 'email') {
-        recommendedAction = "Verify the sender through an independent channel before sharing credentials, OTPs, financial information, or sensitive documents.";
-      } else if (type === 'phone') {
-        recommendedAction = "Treat this number with caution. Independently verify the caller before sharing sensitive information or taking an important action.";
-      } else { // website or generic
-        recommendedAction = "Exercise caution. Verify the target through an independent source before sharing sensitive information or taking an important action.";
-      }
-      
-    } else {
-      // LOW RISK
-      summary = "No major technical risk indicators were detected in the available checks.";
-      explanation = warnings.length > 0 
-        ? `The technical verification passed overall, but noted minor observations: ${warnings.join('; ')}.`
-        : "The available technical verification signals did not identify significant warning signs. This assessment reflects the checks currently available to VerifyMe and is not a guarantee of safety.";
-        
-      if (type === 'email') {
-        recommendedAction = "Proceed with normal caution and verify the sender before sharing sensitive information.";
-      } else if (type === 'phone') {
-        recommendedAction = "Proceed with normal caution and verify the caller through an independent channel before taking sensitive action.";
-      } else { // website or generic
-        recommendedAction = "Proceed with normal caution. Before sharing sensitive information, verify the identity or organization through an independent source.";
-      }
-    }
-
-    return {
-      technicalAssessment: {
-        summary: summary,
-        explanation: explanation,
-        recommendedAction: recommendedAction
-      },
-      aiAvailable: false
-    };
-  }
+  return await makeGroqRequest();
 };
 
 const performVerification = async (type, normalizedInput) => {
   // 1. Gather deterministic evidence
   const deterministicData = await getDeterministicSignals(type, normalizedInput);
   
-  // 2. Call AI Interpretation
-  const aiResult = await callGroqAPI(type, normalizedInput, deterministicData);
+  // 2. Generate analysis (AI or Deterministic)
+  const analysis = await generateRiskInterpretation(type, normalizedInput, deterministicData);
 
-  // 3. Combine into final structure
+  // 3. Return the exact unified contract requested by the frontend
   return {
-    score: deterministicData.score,
-    riskLevel: deterministicData.riskLevel,
-    confidence: deterministicData.confidence,
-    technicalAssessment: aiResult.technicalAssessment,
-    aiAvailable: aiResult.aiAvailable,
-    // Provide safe defaults for legacy UI to prevent crashing while waiting for frontend update
-    summary: aiResult.technicalAssessment?.summary || "",
-    whyThisScore: aiResult.technicalAssessment?.explanation || "",
-    recommendedAction: aiResult.technicalAssessment?.recommendedAction || "",
-    signals: deterministicData.signals,
-    warnings: deterministicData.warnings,
-    limitations: deterministicData.limitations,
-    analysisType: aiResult.aiAvailable ? "deterministic + AI" : "deterministic fallback"
+    success: true,
+    verification: {
+      score: deterministicData.score,
+      riskLevel: deterministicData.riskLevel,
+      targetType: type,
+      targetValue: normalizedInput,
+      signalsAnalyzed: deterministicData.signals.length + deterministicData.warnings.length,
+      evidenceChecked: deterministicData.signals.length,
+      riskIndicators: deterministicData.warnings.length,
+      confidence: deterministicData.confidence,
+      signals: deterministicData.signals,
+      warnings: deterministicData.warnings,
+      limitations: deterministicData.limitations
+    },
+    analysis: analysis,
+    
+    // Spread for legacy backwards compatibility during transition
+    ...deterministicData,
+    summary: analysis.summary,
+    whyThisScore: analysis.whyScore.join(' '),
+    recommendedAction: analysis.recommendedAction
   };
 };
 
