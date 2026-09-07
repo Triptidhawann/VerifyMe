@@ -2,6 +2,7 @@ const Groq = require('groq-sdk');
 const dns = require('dns').promises;
 const http = require('http');
 const https = require('https');
+const { parsePhoneNumber } = require('libphonenumber-js');
 
 let groq;
 try {
@@ -19,11 +20,10 @@ async function checkDomain(domain) {
     const addresses = await dns.resolve(domain);
     if (addresses && addresses.length > 0) result.exists = true;
   } catch (e) {
-    // If ENOTFOUND, the domain doesn't exist
     if (e.code !== 'ENODATA') return result;
   }
   
-  if (!result.exists) return result; // Don't bother with MX if no A/AAAA/etc
+  if (!result.exists) return result;
 
   try {
     const mxRecords = await dns.resolveMx(domain);
@@ -57,7 +57,6 @@ async function checkHttp(urlToParse) {
     try {
       const url = new URL(urlToParse);
       
-      // Basic SSRF Protection
       const forbiddenHostnames = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254'];
       if (forbiddenHostnames.includes(url.hostname)) {
         return resolve({ reachable: false, reason: 'Internal IP blocked for security' });
@@ -69,7 +68,7 @@ async function checkHttp(urlToParse) {
       const req = client.request(url, {
         method: 'HEAD',
         timeout: 3000,
-        rejectUnauthorized: false // We just want to see if it responds
+        rejectUnauthorized: false
       }, (res) => {
         resolve({ reachable: true, status: res.statusCode });
       });
@@ -99,32 +98,45 @@ const getDeterministicSignals = async (type, normalizedInput) => {
   const limitations = [];
   let formatValid = false;
   
-  // Baseline score is Neutral (50). Not guilty until proven innocent, but not trusted either.
   let score = 50;
-  // Confidence indicates how much evidence we actually gathered.
   let confidence = 0; 
 
   if (type === 'phone') {
-    const phoneRegex = /^\+?[0-9]{7,15}$/;
-    if (phoneRegex.test(normalizedInput)) {
-      formatValid = true;
-      signals.push('Phone structure matches standard E.164 format');
-      score += 10;
-      confidence += 20; // Regex check
-    } else {
-      warnings.push('Phone format appears malformed or non-standard');
-      score -= 30;
+    try {
+      // Use IN as a default region. This correctly interprets Indian 10-digit local numbers.
+      // International numbers with + will override this default automatically.
+      const phoneNumber = parsePhoneNumber(normalizedInput, 'IN');
+      
+      if (phoneNumber && phoneNumber.isValid()) {
+        formatValid = true;
+        const region = phoneNumber.country || 'Unknown';
+        
+        if (region === 'IN') {
+          signals.push('Valid 10-digit Indian mobile-number format');
+          signals.push('Recognized as an Indian local-format number');
+          score += 35; 
+        } else {
+          signals.push(`Valid format for country/region: ${region}`);
+          score += 35;
+        }
+        
+        if (normalizedInput.startsWith('+')) {
+          signals.push('Includes explicit international country code');
+        }
+        
+        confidence += 30;
+      } else {
+        warnings.push('Phone number fails numbering rules for the detected region');
+        score -= 30;
+        confidence += 20;
+      }
+    } catch (e) {
+      warnings.push('Phone format appears severely malformed');
+      score -= 40;
       confidence += 20; 
     }
     
-    if (!normalizedInput.startsWith('+')) {
-      warnings.push('Missing country code');
-      score -= 10;
-    } else {
-      signals.push('Includes international country code');
-      score += 5;
-    }
-    
+    limitations.push('A valid number format does not prove that the number belongs to a particular person.');
     limitations.push('Phone carrier, location, and owner reputation could not be independently verified via external intelligence.');
 
   } else if (type === 'email') {
@@ -321,7 +333,13 @@ const generateDeterministicInterpretation = (deterministicData, type) => {
   } else {
     // LOW RISK
     summary = "The verification signals currently available do not show significant warning indicators. However, the available evidence should still be independently verified before making a sensitive decision.";
-    whyScore.push("The target passed all available formatting and structural verification checks.");
+    
+    if (type === 'phone' && signals.includes('Recognized as an Indian local-format number')) {
+      whyScore.push("The number matches the expected 10-digit Indian mobile-number format. Because it was entered in local Indian format, the absence of +91 does not by itself indicate risk.");
+    } else {
+      whyScore.push("The target passed all available formatting and structural verification checks.");
+    }
+    
     whyScore.push(`Confirmed positive signals: ${signals.length}.`);
 
     if (type === 'email') {

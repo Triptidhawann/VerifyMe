@@ -19,6 +19,7 @@
     "firebase-admin": "^14.3.0",
     "groq-sdk": "^1.6.0",
     "jsonwebtoken": "^9.0.3",
+    "libphonenumber-js": "^1.13.12",
     "mongoose": "^9.9.2",
     "serverless-http": "^4.0.0"
   },
