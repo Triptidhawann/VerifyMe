@@ -4,7 +4,7 @@
   "description": "VerifyMe is a digital trust and verification platform. It will eventually provide users the ability to verify phone numbers, email addresses, and website URLs. The application will offer identity information, trust scores, reputation signals, risk levels, and an administrative system.",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run dev --prefix client",
+    "dev": "concurrently -n \"server,client\" -c \"cyan,magenta\" \"npm run server\" \"npm run client\"",
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
     "build": "npm run build --prefix client",
@@ -31,5 +31,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.4",
     "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

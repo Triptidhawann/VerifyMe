@@ -110,52 +110,52 @@ const INJECTED_STYLES = `
   .ai-robot-wrapper::after {
       content: '';
       position: absolute;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(16, 185, 129, 0.06) 35%, transparent 65%);
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(16, 185, 129, 0.08) 35%, transparent 65%);
       z-index: -1;
       border-radius: 50%;
-      filter: blur(40px);
+      filter: blur(45px);
       animation: pulseCore 6s ease-in-out infinite;
   }
 
   @keyframes pulseCore {
       0%, 100% { transform: scale(0.92); opacity: 0.6; }
-      50% { transform: scale(1.12); opacity: 0.85; }
+      50% { transform: scale(1.15); opacity: 0.9; }
   }
 
   .ai-robot-image {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8));
+      filter: drop-shadow(0 25px 45px rgba(0, 0, 0, 0.85));
       animation: floatRobot 6s ease-in-out infinite;
   }
 
   @keyframes floatRobot { 
       0% { transform: translateY(0) rotate(0deg); } 
-      25% { transform: translateY(-10px) rotate(1.2deg); } 
-      50% { transform: translateY(-20px) rotate(0deg); } 
-      75% { transform: translateY(-8px) rotate(-1.2deg); } 
+      25% { transform: translateY(-12px) rotate(1.2deg); } 
+      50% { transform: translateY(-24px) rotate(0deg); } 
+      75% { transform: translateY(-10px) rotate(-1.2deg); } 
       100% { transform: translateY(0) rotate(0deg); } 
   }
 
   .robot-floor-shadow {
       position: absolute;
-      bottom: 2%;
+      bottom: 0%;
       left: 50%;
       transform: translateX(-50%);
-      width: 180px;
-      height: 16px;
-      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, transparent 70%);
+      width: 220px;
+      height: 18px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, transparent 70%);
       border-radius: 50%;
-      filter: blur(10px);
+      filter: blur(12px);
       animation: shadowPulse 6s ease-in-out infinite;
       z-index: 0;
   }
 
   @keyframes shadowPulse {
-      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
       50% { transform: translateX(-50%) scale(0.75); opacity: 0.4; }
   }
 
@@ -375,7 +375,7 @@ export function CinematicHero({
         </div>
       </div>
 
-      {/* FOREGROUND LAYER: The Physical Deep Blue Card with 3D Robot in Center */}
+      {/* FOREGROUND LAYER: The Physical Deep Blue Card with Prominent 3D Robot in Center */}
       <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ perspective: "1500px" }}>
         <div
           ref={mainCardRef}
@@ -400,29 +400,29 @@ export function CinematicHero({
               </p>
             </div>
 
-            {/* 2. CENTER: 3D AI ROBOT HERO (Spacious 6 Columns, Cleanly Nested Badges) */}
-            <div className="mockup-scroll-wrapper order-2 lg:order-2 lg:col-span-6 relative w-full h-[380px] sm:h-[460px] lg:h-[540px] flex items-center justify-center z-10" style={{ perspective: "1200px" }}>
+            {/* 2. CENTER: 3D AI ROBOT HERO (Prominently Sized, Commanding Center Stage) */}
+            <div className="mockup-scroll-wrapper order-2 lg:order-2 lg:col-span-6 relative w-full h-[420px] sm:h-[500px] lg:h-[600px] flex items-center justify-center z-10" style={{ perspective: "1200px" }}>
               <div className="relative w-full h-full flex items-center justify-center">
                 
-                {/* 3D Parallax Robot Wrapper that tilts with mouse */}
+                {/* 3D Parallax Robot Wrapper (Larger dimensions to make robot prominent) */}
                 <div
                   ref={mockupRef}
-                  className="relative w-[280px] sm:w-[350px] lg:w-[420px] h-[340px] sm:h-[420px] lg:h-[480px] flex items-center justify-center will-change-transform transform-style-3d select-none"
+                  className="relative w-[320px] sm:w-[420px] lg:w-[490px] h-[380px] sm:h-[480px] lg:h-[560px] flex items-center justify-center will-change-transform transform-style-3d select-none"
                 >
                   {/* The 3D Robot Image & Floor Shadow */}
                   <div className="ai-robot-wrapper relative w-full h-full flex items-center justify-center">
                     <img 
                       src="/robot-assistant.jpg" 
                       alt="VerifyMe Autonomous AI Robot Assistant" 
-                      className="ai-robot-image w-full h-full object-contain" 
+                      className="ai-robot-image w-full h-full object-contain transform scale-110 sm:scale-115" 
                     />
                     <div className="robot-floor-shadow"></div>
                   </div>
 
-                  {/* Clean Non-Overlapping Floating Badges (tucked comfortably close to the robot) */}
+                  {/* Clean Floating Badges Framing the Larger Robot */}
                   
                   {/* Badge 1: Top Left - AI Scam Shield */}
-                  <div className="floating-badge absolute top-3 sm:top-8 left-0 sm:left-2 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
+                  <div className="floating-badge absolute top-2 sm:top-6 -left-2 sm:left-1 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-400/40 shadow-inner">
                       <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     </div>
@@ -433,7 +433,7 @@ export function CinematicHero({
                   </div>
 
                   {/* Badge 2: Middle Right - 0.18s Latency */}
-                  <div className="floating-badge absolute top-1/2 -translate-y-1/2 right-0 sm:right-2 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
+                  <div className="floating-badge absolute top-1/2 -translate-y-1/2 -right-2 sm:right-1 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
                     <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-400/40 shadow-inner">
                       <Zap className="w-4 h-4 text-indigo-400" />
                     </div>
@@ -444,7 +444,7 @@ export function CinematicHero({
                   </div>
 
                   {/* Badge 3: Bottom Left - Trust Score: 98/100 */}
-                  <div className="floating-badge absolute bottom-3 sm:bottom-8 left-2 sm:left-4 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
+                  <div className="floating-badge absolute bottom-2 sm:bottom-6 left-1 sm:left-3 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-400/40 text-emerald-400 font-mono font-bold text-xs shadow-inner">
                       <span className="counter-val">98</span>
                     </div>
