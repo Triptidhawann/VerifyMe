@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase/config';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { Shield, ShieldAlert, ShieldCheck, Activity, Search, AlertTriangle } from 'lucide-react';
+import { 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  Activity, 
+  Search, 
+  AlertTriangle,
+  ArrowRight,
+  History,
+  Phone,
+  Mail,
+  Globe
+} from 'lucide-react';
 import './HistoryPanel.css';
 
 const HistoryPanel = ({ refreshTrigger }) => {
@@ -10,6 +23,7 @@ const HistoryPanel = ({ refreshTrigger }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filterType, setFilterType] = useState('all');
 
   useEffect(() => {
     if (!user) return;
@@ -33,13 +47,13 @@ const HistoryPanel = ({ refreshTrigger }) => {
       },
       (err) => {
         console.error("Error fetching history:", err);
-        setError('Unable to load verification history.');
+        setError('Unable to load verification audit logs.');
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   const stats = {
     total: history.length,
@@ -49,14 +63,19 @@ const HistoryPanel = ({ refreshTrigger }) => {
   };
 
   const getRiskIcon = (level) => {
-    if (level === 'LOW RISK') return <ShieldCheck size={18} style={{ color: '#10b981' }} />;
-    if (level === 'HIGH RISK') return <ShieldAlert size={18} style={{ color: '#ef4444' }} />;
-    return <Shield size={18} style={{ color: '#f59e0b' }} />;
+    if (level === 'LOW RISK') return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
+    if (level === 'HIGH RISK') return <ShieldAlert className="w-5 h-5 text-rose-400" />;
+    return <Shield className="w-5 h-5 text-amber-400" />;
+  };
+
+  const getTypeIcon = (type) => {
+    if (type === 'phone') return <Phone className="w-3.5 h-3.5 text-slate-400" />;
+    if (type === 'email') return <Mail className="w-3.5 h-3.5 text-slate-400" />;
+    return <Globe className="w-3.5 h-3.5 text-slate-400" />;
   };
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Just now';
-    // Handle Firebase Timestamp
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString(undefined, { 
       month: 'short', 
@@ -75,96 +94,141 @@ const HistoryPanel = ({ refreshTrigger }) => {
       }
     }
     if (type === 'phone') {
-      if (target.length > 4) {
+      if (target.length > 5) {
         return `${target.slice(0, 3)}***${target.slice(-2)}`;
       }
     }
-    return target; // Leave website or short inputs unmasked
+    return target;
   };
+
+  const filteredHistory = filterType === 'all' 
+    ? history 
+    : history.filter(item => (item.type || '').toLowerCase() === filterType);
 
   if (loading) {
     return (
-      <section className="history-section">
-        <div className="history-loading">
-          <Activity className="spinning" size={24} />
-          <span>Loading intelligence history...</span>
+      <section className="history-panel-root">
+        <div className="history-loading-box">
+          <Activity className="w-5 h-5 text-indigo-400 animate-spin" />
+          <span>Synchronizing audit telemetry...</span>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="history-section">
-      <div className="history-header">
-        <h2>Intelligence History</h2>
+    <section className="history-panel-root">
+      <div className="history-top-header">
+        <div className="history-title-group">
+          <div className="history-icon-badge">
+            <History className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="history-section-title">Recent Intelligence Audits</h2>
+            <p className="history-section-desc">Encrypted activity record of scanned digital entities.</p>
+          </div>
+        </div>
+
+        {/* Filter Pills */}
+        {stats.total > 0 && (
+          <div className="history-filter-pills">
+            {['all', 'phone', 'email', 'website'].map(t => (
+              <button
+                key={t}
+                type="button"
+                className={`filter-btn ${filterType === t ? 'active' : ''}`}
+                onClick={() => setFilterType(t)}
+              >
+                {t.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Aggregate Stats Cards */}
       {stats.total > 0 && (
-        <div className="history-stats">
-          <div className="stat-card">
-            <span className="stat-value">{stats.total}</span>
-            <span className="stat-label">Total Checks</span>
+        <div className="history-stat-strip">
+          <div className="stat-pill-card">
+            <span className="stat-pill-num text-white">{stats.total}</span>
+            <span className="stat-pill-label">Total Audits</span>
           </div>
-          <div className="stat-card">
-            <span className="stat-value" style={{ color: 'var(--success)' }}>{stats.lowRisk}</span>
-            <span className="stat-label">Low Risk</span>
+          <div className="stat-pill-card">
+            <span className="stat-pill-num text-emerald-400">{stats.lowRisk}</span>
+            <span className="stat-pill-label">Verified Trust</span>
           </div>
-          <div className="stat-card">
-            <span className="stat-value" style={{ color: 'var(--warning)' }}>{stats.moderateRisk}</span>
-            <span className="stat-label">Review Req.</span>
+          <div className="stat-pill-card">
+            <span className="stat-pill-num text-amber-400">{stats.moderateRisk}</span>
+            <span className="stat-pill-label">Review Advised</span>
           </div>
-          <div className="stat-card">
-            <span className="stat-value" style={{ color: 'var(--danger)' }}>{stats.highRisk}</span>
-            <span className="stat-label">High Risk</span>
+          <div className="stat-pill-card">
+            <span className="stat-pill-num text-rose-400">{stats.highRisk}</span>
+            <span className="stat-pill-label">Threats Flagged</span>
           </div>
         </div>
       )}
 
       {error ? (
-        <div className="history-error">
-          <AlertTriangle size={24} style={{ marginBottom: '8px' }} />
-          <div>{error}</div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>Please try again.</div>
+        <div className="history-error-box">
+          <AlertTriangle className="w-5 h-5 text-rose-400" />
+          <span>{error}</span>
         </div>
       ) : stats.total === 0 ? (
-        <div className="empty-history">
-          <div className="empty-icon-wrapper">
-            <Search size={32} />
+        <div className="history-empty-box">
+          <div className="empty-radar-circle">
+            <Search className="w-6 h-6 text-indigo-400" />
           </div>
-          <h3 style={{ textTransform: 'uppercase', fontSize: '1rem', letterSpacing: '0.05em' }}>No investigations yet</h3>
-          <p>Your verification intelligence will appear here after your first investigation.</p>
+          <h3 className="empty-title">No Audit History Recorded</h3>
+          <p className="empty-sub">
+            Your telemetry and threat reports will automatically populate here after you conduct your first investigation.
+          </p>
         </div>
       ) : (
-        <>
-          <div className="history-list">
-            {history.slice(0, 3).map(item => (
-              <div key={item.id} className="history-card">
-                <div className="history-card-icon">
-                  {getRiskIcon(item.riskLevel)}
-                </div>
-                <div className="history-card-main">
-                  <div className="history-card-title">{maskTarget(item.type, item.inputValue)}</div>
-                  <div className="history-card-meta">
-                    <span className="type-badge">{item.type.toUpperCase()}</span>
-                    <span className="date">{formatDate(item.createdAt)}</span>
+        <div className="history-list-wrapper">
+          <div className="history-items-grid">
+            {filteredHistory.slice(0, 4).map(item => {
+              const isLow = item.riskLevel === 'LOW RISK';
+              const isHigh = item.riskLevel === 'HIGH RISK';
+              const riskColor = isLow ? '#10B981' : (isHigh ? '#EF4444' : '#F59E0B');
+
+              return (
+                <div key={item.id} className="history-item-row">
+                  <div className="item-risk-indicator">
+                    {getRiskIcon(item.riskLevel)}
+                  </div>
+
+                  <div className="item-details-col">
+                    <div className="item-target-text font-mono">
+                      {maskTarget(item.type, item.targetValue || item.inputValue)}
+                    </div>
+                    <div className="item-sub-meta">
+                      <span className="item-type-badge">
+                        {getTypeIcon(item.type)}
+                        <span>{(item.type || 'target').toUpperCase()}</span>
+                      </span>
+                      <span className="item-dot">•</span>
+                      <span className="item-time">{formatDate(item.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  <div className="item-score-col" style={{ color: riskColor }}>
+                    <span className="item-score-num">{item.score || 0}</span>
+                    <span className="item-score-denom">/100</span>
                   </div>
                 </div>
-                <div className="history-card-score">
-                  <span className="score">{item.score}</span>
-                  <span className="max">/100</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
-          {history.length > 3 && (
-            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <a href="/history" className="btn btn-secondary" style={{ fontSize: '0.875rem' }}>
-                View Full History →
-              </a>
+          {history.length > 4 && (
+            <div className="history-view-all-wrap">
+              <Link to="/history" className="history-view-all-btn">
+                <span>View Complete Audit Log ({history.length})</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           )}
-        </>
+        </div>
       )}
     </section>
   );

@@ -1,177 +1,218 @@
-.dashboard-container {
+/* ==========================================================================
+   VerifyMe Dashboard Viewport — Physical Skeuomorphic Design
+   ========================================================================== */
+
+.dash-root-container {
   min-height: 100vh;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  width: 100vw;
+  background-color: #030712;
+  color: #F8FAFC;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  font-family: inherit;
 }
 
-.workspace {
-  padding: 3rem 0 5rem;
+/* Background Atmosphere */
+.dash-mesh-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  background-size: 60px 60px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+}
+
+.dash-ambient-glow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.02) 40%, transparent 70%);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dash-main-viewport {
+  position: relative;
+  z-index: 10;
   flex: 1;
-}
-
-.workspace-hero {
-  margin-bottom: 3rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.hero-greeting {
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.hero-title {
-  font-size: 2.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.hero-subtitle {
-  color: var(--text-secondary);
-  font-size: 1rem;
-  max-width: 600px;
-  line-height: 1.6;
-}
-
-/* Verification Tool */
-.verify-tool-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
-  margin-bottom: 4rem;
-  /* Removed excessive shadow for cleaner SaaS look */
-}
-
-.workspace-section-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.verify-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-}
-
-.verify-tab {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 1.25rem 1rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.verify-tab:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-.verify-tab.active {
-  border-color: var(--accent-primary);
-  background: rgba(139, 92, 246, 0.05);
-  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.2);
-}
-
-.verify-tab .tab-icon {
-  font-size: 1.5rem;
-  color: var(--text-secondary);
-}
-
-.verify-tab.active .tab-icon {
-  color: var(--accent-primary);
-}
-
-.verify-tab .tab-title {
-  font-weight: 500;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.verify-tab .tab-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.verify-form {
-  max-width: 500px;
+  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
 }
 
-.verify-input-group {
+/* Hero Header */
+.dash-hero-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.875rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #A5B4FC;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   margin-bottom: 1.25rem;
 }
 
-/* Input is styled globally in index.css, just overriding some specific sizing here if needed */
-.verify-input {
-  font-size: 1rem;
-  padding: 0.875rem 1rem;
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #6366F1;
+  box-shadow: 0 0 8px #6366F1;
+  animation: pulseDot 2s infinite;
 }
 
-.verify-btn {
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.dash-hero-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.dash-hero-description {
+  font-size: 1rem;
+  color: #94A3B8;
+  max-width: 640px;
+  line-height: 1.6;
+  margin-bottom: 2.25rem;
+}
+
+/* Telemetry Strip */
+.dash-telemetry-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
   width: 100%;
-  padding: 0.875rem;
-  font-size: 1rem;
-  margin-top: 0.5rem;
 }
 
-.verify-status-msg {
-  margin-top: 1.5rem;
-  padding: 1.25rem;
-  background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  text-align: center;
-  animation: fadeIn 0.3s ease;
+@media (max-width: 900px) {
+  .dash-telemetry-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-/* History Section */
-.history-section h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
-}
-
-.empty-history {
-  background: rgba(255,255,255,0.02);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 4rem 2rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-@media (max-width: 768px) {
-  .verify-tabs {
+@media (max-width: 480px) {
+  .dash-telemetry-strip {
     grid-template-columns: 1fr;
   }
-  .dash-nav-links {
-    display: none; /* simple responsive fix for now */
-  }
-  .workspace-header h1 {
-    font-size: 1.5rem;
-  }
+}
+
+.telemetry-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+
+.telemetry-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.telemetry-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.telemetry-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748B;
+}
+
+.telemetry-val {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #E2E8F0;
+  margin-top: 2px;
+}
+
+/* Legacy & Sub-Page Wrappers */
+.dashboard-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #030712;
+  color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  font-family: inherit;
+}
+
+.workspace {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  flex: 1;
+}
+
+.workspace-hero, .workspace-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.workspace-hero h1, .workspace-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.workspace-hero p, .workspace-header p {
+  color: #94A3B8;
+  font-size: 1rem;
 }

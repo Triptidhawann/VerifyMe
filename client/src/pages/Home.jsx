@@ -1,13 +1,13 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../components/Landing.css';
 
 // Import modular landing components
 import Navbar from '../components/landing/Navbar';
-import Hero from '../components/landing/Hero';
+import CinematicHero from '../components/ui/cinematic-hero';
 import ProblemSection from '../components/landing/ProblemSection';
 import VerificationJourney from '../components/landing/VerificationJourney';
-import EngineSection from '../components/landing/EngineSection';
 import TrustIntelligence from '../components/landing/TrustIntelligence';
 import ProductPrinciples from '../components/landing/ProductPrinciples';
 import CTASection from '../components/landing/CTASection';
@@ -18,23 +18,28 @@ const Home = () => {
 
   if (loading) return null;
 
-  // Protect landing page from authenticated users (route to dashboard)
+  // Route authenticated users to the dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
   return (
-    <>
+    <div className="landing-page-root bg-[#030712] min-h-screen text-slate-100 overflow-x-hidden">
       <Navbar />
-      <Hero />
-      <ProblemSection />
-      <VerificationJourney />
-      {/* <EngineSection /> */}
-      <TrustIntelligence />
+      <CinematicHero />
+      <div id="problem">
+        <ProblemSection />
+      </div>
+      <div id="how-it-works">
+        <VerificationJourney />
+      </div>
+      <div id="why">
+        <TrustIntelligence />
+      </div>
       <ProductPrinciples />
       <CTASection />
       <Footer />
-    </>
+    </div>
   );
 };
 
