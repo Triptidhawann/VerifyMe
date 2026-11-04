@@ -1,0 +1,8 @@
+{
+  "theme": "Original VerifyMe Dark Cyan/Purple Skeuomorphic Theme",
+  "backupDate": "2026-11-03T23:43:56+05:30",
+  "filesBackedUp": 35,
+  "rollbackScript": "client/src/theme_backup/rollback.js",
+  "rollbackCommand": "npm run undo-theme",
+  "chatCommand": "UNDO THEME"
+}

@@ -8,6 +8,7 @@
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
     "build": "npm run build --prefix client",
+    "undo-theme": "npm run undo-theme --prefix client",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

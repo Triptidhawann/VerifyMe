@@ -347,29 +347,30 @@ export function CinematicHero({
       </div>
 
       {/* BACKGROUND LAYER 2: Tactile CTA Buttons */}
-      <div className="cta-wrapper absolute z-10 flex flex-col items-center justify-center text-center w-screen px-4 gsap-reveal pointer-events-auto will-change-transform">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
-          <ShieldCheck className="w-4 h-4" /> Ready for Production Verification
+      <div className="cta-wrapper absolute z-10 flex flex-col items-center justify-center text-center w-full max-w-4xl px-6 gsap-reveal pointer-events-auto will-change-transform">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-5 shadow-sm">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span>Ready for Production Verification</span>
         </div>
-        <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-silver-matte">
+        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-5 tracking-tight text-silver-matte max-w-3xl leading-tight">
           {ctaHeading}
         </h2>
-        <p className="text-slate-400 text-base md:text-xl mb-10 max-w-xl mx-auto font-light leading-relaxed">
+        <p className="text-slate-300 text-sm sm:text-base md:text-lg mb-8 max-w-xl mx-auto font-normal leading-relaxed">
           {ctaDescription}
         </p>
-        <div className="flex flex-col sm:flex-row gap-5 items-center justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center justify-center w-full sm:w-auto">
           <Link
             to="/signup"
-            className="btn-modern-light flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group font-semibold text-slate-950 tracking-tight"
+            className="btn-modern-light inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-slate-950 text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px] shadow-lg shadow-black/30"
           >
-            <ShieldCheck className="w-5 h-5 text-indigo-600 transition-transform group-hover:scale-110" />
+            <ShieldCheck className="w-5 h-5 text-indigo-600 transition-transform group-hover:scale-110 flex-shrink-0" />
             <span>Launch Free Audit</span>
           </Link>
           <Link
             to="/login"
-            className="btn-modern-dark flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group font-semibold text-white tracking-tight border border-slate-700/60"
+            className="btn-modern-dark inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-white text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px] border border-slate-700/80 shadow-lg shadow-black/40"
           >
-            <Lock className="w-4 h-4 text-slate-400 group-hover:text-white" />
+            <Lock className="w-4 h-4 text-slate-400 group-hover:text-white flex-shrink-0 transition-colors" />
             <span>Sign In to Workspace</span>
           </Link>
         </div>

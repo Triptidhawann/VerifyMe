@@ -1,43 +1,76 @@
+import React from 'react';
+import { PhoneCall, Mail, Link as LinkIcon, AlertTriangle, ShieldAlert } from 'lucide-react';
+
 const ProblemSection = () => {
   return (
-    <section id="problem" className="section-padding" style={{ background: 'var(--bg-light)' }}>
-      <div className="container">
-        <div className="section-title animate-fade-up">
-          <h2>Unknown doesn't mean safe.</h2>
-          <p>Every day you encounter digital entities with zero trust context. VerifyMe transforms uncertainty into explainable evidence.</p>
+    <section id="problem" className="section-padding relative overflow-hidden">
+      {/* Background ambient lighting */}
+      <div 
+        className="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] opacity-15 blur-[140px] rounded-full"
+        style={{ background: 'radial-gradient(circle, #EF4444 0%, #6366F1 50%, transparent 80%)' }}
+      />
+
+      <div className="container relative z-10">
+        <div className="section-title text-center max-w-3xl mx-auto mb-16 animate-fade-up">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs font-mono uppercase tracking-wider mb-4 shadow-sm">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+            <span>The Asymmetry of Digital Trust</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
+            Unknown doesn't mean safe.
+          </h2>
+          <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
+            Every day you encounter digital entities with zero trust context. VerifyMe transforms uncertainty into explainable evidence.
+          </p>
         </div>
         
         <div className="problem-grid">
-          <div className="problem-card">
-            <div className="problem-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
+          {/* Card 1: Unknown Call */}
+          <div className="problem-card group">
+            <div className="problem-icon-wrapper group-hover:scale-110 transition-transform duration-300">
+              <PhoneCall className="w-6 h-6 text-indigo-400" />
             </div>
-            <h3>Unknown Call</h3>
-            <p>Is this a legitimate organization calling, or a recognized threat actor executing a social engineering attempt?</p>
+            <h3 className="text-xl font-bold text-white tracking-tight mb-2.5 group-hover:text-indigo-200 transition-colors">
+              Unknown Call
+            </h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-4">
+              Is this a legitimate organization calling, or a recognized threat actor executing a voice phishing or social engineering attempt?
+            </p>
+            <div className="pt-3 border-t border-slate-800/80 text-[11px] font-mono text-indigo-400 font-medium">
+              E.164 Invariance Analysis
+            </div>
           </div>
           
-          <div className="problem-card">
-            <div className="problem-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
+          {/* Card 2: Suspicious Email */}
+          <div className="problem-card group">
+            <div className="problem-icon-wrapper group-hover:scale-110 transition-transform duration-300">
+              <Mail className="w-6 h-6 text-indigo-400" />
             </div>
-            <h3>Suspicious Email</h3>
-            <p>Does the sender domain legitimately match the organization, and is the security configuration properly verified?</p>
+            <h3 className="text-xl font-bold text-white tracking-tight mb-2.5 group-hover:text-indigo-200 transition-colors">
+              Suspicious Email
+            </h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-4">
+              Does the sender domain legitimately match the organization, and are the cryptographic SPF, DKIM, and DMARC configurations valid?
+            </p>
+            <div className="pt-3 border-t border-slate-800/80 text-[11px] font-mono text-indigo-400 font-medium">
+              DNS Protocol Verification
+            </div>
           </div>
           
-          <div className="problem-card">
-            <div className="problem-icon-wrapper">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-              </svg>
+          {/* Card 3: Unexpected Link */}
+          <div className="problem-card group">
+            <div className="problem-icon-wrapper group-hover:scale-110 transition-transform duration-300">
+              <LinkIcon className="w-6 h-6 text-indigo-400" />
             </div>
-            <h3>Unexpected Link</h3>
-            <p>Where does this URL actually route to? Is it a known phishing infrastructure or a secure destination?</p>
+            <h3 className="text-xl font-bold text-white tracking-tight mb-2.5 group-hover:text-indigo-200 transition-colors">
+              Unexpected Link
+            </h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-4">
+              Where does this URL actually route to? Is it a homograph spoofing attempt, known phishing infrastructure, or secure destination?
+            </p>
+            <div className="pt-3 border-t border-slate-800/80 text-[11px] font-mono text-indigo-400 font-medium">
+              Real-Time URL Dissection
+            </div>
           </div>
         </div>
       </div>
