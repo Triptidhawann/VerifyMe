@@ -57,14 +57,15 @@ const HistoryPanel = ({ refreshTrigger }) => {
 
   const stats = {
     total: history.length,
-    lowRisk: history.filter(h => h.riskLevel === 'LOW RISK').length,
-    moderateRisk: history.filter(h => h.riskLevel === 'MODERATE RISK').length,
-    highRisk: history.filter(h => h.riskLevel === 'HIGH RISK').length,
+    lowRisk: history.filter(h => h.riskLevel === 'LOW RISK' || h.technicalStatus === 'TECHNICAL CHECKS PASSED').length,
+    moderateRisk: history.filter(h => h.riskLevel === 'MODERATE RISK' || h.riskLevel === 'LIMITED VERIFICATION').length,
+    highRisk: history.filter(h => h.riskLevel === 'HIGH RISK' || h.technicalStatus === 'CONFIRMED THREAT').length,
   };
 
-  const getRiskIcon = (level) => {
-    if (level === 'LOW RISK') return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
-    if (level === 'HIGH RISK') return <ShieldAlert className="w-5 h-5 text-rose-400" />;
+  const getRiskIcon = (level, techStatus) => {
+    if (level === 'LOW RISK' || techStatus === 'TECHNICAL CHECKS PASSED') return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
+    if (level === 'HIGH RISK' || techStatus === 'CONFIRMED THREAT') return <ShieldAlert className="w-5 h-5 text-rose-400" />;
+    if (level === 'INVALID INPUT' || techStatus === 'INVALID INPUT') return <AlertTriangle className="w-5 h-5 text-slate-400" />;
     return <Shield className="w-5 h-5 text-amber-400" />;
   };
 
@@ -125,7 +126,7 @@ const HistoryPanel = ({ refreshTrigger }) => {
           </div>
           <div>
             <h2 className="history-section-title">Recent Intelligence Audits</h2>
-            <p className="history-section-desc">Encrypted activity record of scanned digital entities.</p>
+            <p className="history-section-desc">Audit activity record of scanned digital entities.</p>
           </div>
         </div>
 
@@ -155,15 +156,15 @@ const HistoryPanel = ({ refreshTrigger }) => {
           </div>
           <div className="stat-pill-card">
             <span className="stat-pill-num text-emerald-400">{stats.lowRisk}</span>
-            <span className="stat-pill-label">Verified Trust</span>
+            <span className="stat-pill-label">Technical Checks Passed</span>
           </div>
           <div className="stat-pill-card">
             <span className="stat-pill-num text-amber-400">{stats.moderateRisk}</span>
-            <span className="stat-pill-label">Review Advised</span>
+            <span className="stat-pill-label">Limited Verification</span>
           </div>
           <div className="stat-pill-card">
             <span className="stat-pill-num text-rose-400">{stats.highRisk}</span>
-            <span className="stat-pill-label">Threats Flagged</span>
+            <span className="stat-pill-label">High Risk Flagged</span>
           </div>
         </div>
       )}
@@ -187,14 +188,15 @@ const HistoryPanel = ({ refreshTrigger }) => {
         <div className="history-list-wrapper">
           <div className="history-items-grid">
             {filteredHistory.slice(0, 4).map(item => {
-              const isLow = item.riskLevel === 'LOW RISK';
-              const isHigh = item.riskLevel === 'HIGH RISK';
-              const riskColor = isLow ? '#10B981' : (isHigh ? '#EF4444' : '#F59E0B');
+              const isLow = item.riskLevel === 'LOW RISK' || item.technicalStatus === 'TECHNICAL CHECKS PASSED';
+              const isHigh = item.riskLevel === 'HIGH RISK' || item.technicalStatus === 'CONFIRMED THREAT';
+              const isInvalid = item.riskLevel === 'INVALID INPUT' || item.technicalStatus === 'INVALID INPUT';
+              const riskColor = isInvalid ? '#94A3B8' : (isLow ? '#10B981' : (isHigh ? '#EF4444' : '#F59E0B'));
 
               return (
                 <div key={item.id} className="history-item-row">
                   <div className="item-risk-indicator">
-                    {getRiskIcon(item.riskLevel)}
+                    {getRiskIcon(item.riskLevel, item.technicalStatus)}
                   </div>
 
                   <div className="item-details-col">

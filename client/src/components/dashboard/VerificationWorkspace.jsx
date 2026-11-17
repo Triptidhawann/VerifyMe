@@ -14,8 +14,7 @@ import {
   Server
 } from 'lucide-react';
 import { verifyEntity } from '../../services/verificationEngine';
-import { db, auth } from '../../firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { auth } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import VerificationResult from './VerificationResult';
 import './VerificationWorkspace.css';
@@ -25,8 +24,8 @@ const TABS = [
     id: 'phone', 
     icon: Phone, 
     title: 'Phone Number', 
-    badge: 'E.164 + Carrier',
-    desc: 'Verify unknown caller identity & region legitimacy',
+    badge: 'E.164 Plan & Type',
+    desc: 'Inspect number format, regional numbering plan & line-type risks',
     placeholder: 'Enter phone number (e.g. 9915108159 or +1 415 555 2671)',
     presets: ['9915108159', '+1 415 555 2671', '+44 20 7946 0958']
   },
@@ -35,7 +34,7 @@ const TABS = [
     icon: Mail, 
     title: 'Email Address', 
     badge: 'DNS • MX • DMARC',
-    desc: 'Validate sender domain, mail records & spoof protection',
+    desc: 'Inspect domain DNS, mail exchange records & anti-spoofing policies',
     placeholder: 'Enter email address (e.g. security@paypal.com)',
     presets: ['security@paypal.com', 'support@apple.com', 'billing@fast-verify.xyz']
   },
@@ -43,8 +42,8 @@ const TABS = [
     id: 'website', 
     icon: Globe, 
     title: 'Website Domain', 
-    badge: 'SSRF & Domain Intel',
-    desc: 'Inspect deceptive domains, SSL & phishing threat indicators',
+    badge: 'DNS • TLS • Reachability',
+    desc: 'Inspect domain DNS, TLS certificate validity & HTTP reachability',
     placeholder: 'Enter URL (e.g. https://google.com or secure-login-bank.top)',
     presets: ['https://google.com', 'https://github.com', 'https://secure-login-appleid.top']
   }
@@ -135,22 +134,6 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
     return null;
   };
 
-  const saveToHistory = async (analysisResult) => {
-    if (!user) return;
-    try {
-      const verificationsRef = collection(db, 'users', user.uid, 'verifications');
-      await addDoc(verificationsRef, {
-        ...analysisResult,
-        createdAt: serverTimestamp()
-      });
-      if (onVerificationComplete) {
-        onVerificationComplete();
-      }
-    } catch (err) {
-      console.error("Failed to persist verification record:", err);
-    }
-  };
-
   const handleVerify = async (e) => {
     if (e) e.preventDefault();
     setError('');
@@ -178,8 +161,11 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
       setResult(analysisResult);
       setViewState('result');
       
-      // Save record to user's personal audit log
-      saveToHistory(analysisResult);
+      // Verification was authoritatively saved to Firestore by the backend.
+      // Trigger parent component refresh so HistoryPanel reflects the new record.
+      if (onVerificationComplete) {
+        onVerificationComplete();
+      }
       
     } catch (err) {
       setError(err.message || 'Verification pipeline encountered a connectivity disruption. Please retry.');

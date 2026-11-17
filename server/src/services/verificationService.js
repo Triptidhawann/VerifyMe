@@ -16,20 +16,26 @@ const normalizeInput = (type, input) => {
       // Lowercase and trim
       return normalized.toLowerCase();
 
-    case 'phone':
-      // Strip all non-digit characters except leading plus (for E.164 format)
-      // e.g. "+1 (555) 123-4567" -> "+15551234567"
-      const hasPlus = normalized.startsWith('+');
-      const digitsOnly = normalized.replace(/\D/g, '');
+    case 'phone': {
+      // Clean common formatting characters (spaces, hyphens, parentheses, dots)
+      let phoneClean = normalized.replace(/[\s().-]/g, '');
+      // Handle international access prefix '00' (e.g. '001415...' -> '+1415...')
+      if (phoneClean.startsWith('00')) {
+        phoneClean = '+' + phoneClean.slice(2);
+      }
+      const hasPlus = phoneClean.startsWith('+');
+      const digitsOnly = phoneClean.replace(/\D/g, '');
       return hasPlus ? `+${digitsOnly}` : digitsOnly;
+    }
 
-    case 'website':
+    case 'website': {
       // Lowercase and strip trailing slashes for baseline comparison
       normalized = normalized.toLowerCase();
       if (normalized.endsWith('/')) {
         normalized = normalized.slice(0, -1);
       }
       return normalized;
+    }
 
     default:
       return normalized;

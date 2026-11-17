@@ -1,25 +1,25 @@
-// @desc    Get user profile
+// @desc    Get current authenticated user profile
 // @route   GET /api/users/me
-// @access  Private
+// @access  Private (Authenticated Firebase session required)
 const getMe = async (req, res, next) => {
   try {
     const user = req.user;
     
-    if (user) {
-      res.json({
+    if (user && user.uid) {
+      res.status(200).json({
         success: true,
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt
+          uid: user.uid,
+          email: user.email || null,
+          name: user.name || null,
+          role: user.role || 'USER'
         }
       });
     } else {
-      res.status(404);
-      throw new Error('User not found');
+      res.status(404).json({
+        success: false,
+        error: 'User identity could not be resolved from active token session'
+      });
     }
   } catch (error) {
     next(error);

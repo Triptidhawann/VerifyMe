@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const helmet = require('helmet');
 
-// Middleware
+// Rate limiting & security middlewares
+const { globalRateLimiter } = require('./middleware/rateLimiter');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 
 // Route files
-const authRoutes = require('./routes/auth');
 const verificationRoutes = require('./routes/verifications');
 const reportRoutes = require('./routes/reports');
 const userRoutes = require('./routes/users');
@@ -15,49 +15,82 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Configure allowed origins for CORS
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+// 1. Configure trust proxy for Netlify serverless and reverse proxy environments (1 hop)
+app.set('trust proxy', 1);
+
+// 2. Helmet Security Headers (tailored for API serving web frontend)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows cross-origin API data consumption
+  contentSecurityPolicy: false, // API returns JSON; frontend manages its own HTML CSP
+  frameguard: { action: 'deny' }, // Anti-clickjacking
+  dnsPrefetchControl: { allow: false }
+}));
+
+// 3. Strict CORS configuration
+// Support comma-separated ALLOWED_ORIGINS, FRONTEND_URL, NETLIFY_SITE_URL, and local dev ports
+const parseAllowedOrigins = () => {
+  const origins = new Set(['http://localhost:5173', 'http://localhost:5174']);
+
+  if (process.env.ALLOWED_ORIGINS) {
+    process.env.ALLOWED_ORIGINS.split(',').forEach((orig) => {
+      const trimmed = orig.trim();
+      if (trimmed) origins.add(trimmed);
+    });
+  }
+
+  if (process.env.FRONTEND_URL) {
+    origins.add(process.env.FRONTEND_URL.trim());
+  }
+
+  if (process.env.NETLIFY_SITE_URL) {
+    origins.add(process.env.NETLIFY_SITE_URL.trim());
+  }
+
+  // Normalize: trim and strip trailing slashes
+  return Array.from(origins)
+    .map((o) => (o.endsWith('/') ? o.slice(0, -1) : o))
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins();
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow if no origin (e.g. Postman), if explicitly allowed, or if it's from the deployed Netlify app
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('netlify.app')) {
-      callback(null, true);
-    } else {
-      // Clean up trailing slash issues just in case
-      const originNoSlash = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-      if (allowedOrigins.includes(originNoSlash)) {
-         callback(null, true);
-      } else {
-         callback(new Error('Not allowed by CORS'));
-      }
-    }
-  },
-  credentials: true
-}));
-app.use(express.json());
+  origin: function (origin, callback) {
+    // Non-browser requests (e.g. curl, CLI, server-to-server, unit tests) send no Origin header
+    if (!origin) return callback(null, true);
 
-// Basic health check endpoint
+    const cleanOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: Origin '${origin}' is not authorized.`));
+  },
+  credentials: false // Bearer token authentication in Authorization header; no cookies needed
+}));
+
+// 4. Request body size limit: 16KB max to prevent memory exhaustion / DoS
+app.use(express.json({ limit: '16kb' }));
+
+// 5. Basic health check endpoint (mounted before rate limiter so health probes are not throttled)
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'success',
-    message: 'VerifyMe backend is running normally with Firebase Auth.',
+    status: 'ok',
+    message: 'VerifyMe backend is operational.',
     timestamp: new Date().toISOString()
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
+// 6. Global rate limiting across API endpoints
+app.use('/api', globalRateLimiter);
+
+// 7. API Routes
 app.use('/api/verifications', verificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Error Handling Middleware
+// 8. Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 

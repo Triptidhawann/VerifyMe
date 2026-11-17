@@ -34,31 +34,108 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
     recommendedAction: result.recommendedAction
   };
 
-  const isLowRisk = verification.riskLevel === 'LOW RISK';
-  const isHighRisk = verification.riskLevel === 'HIGH RISK';
-  
-  const StatusIcon = isLowRisk ? ShieldCheck : (isHighRisk ? ShieldAlert : Shield);
-  const statusColor = isLowRisk ? '#10B981' : (isHighRisk ? '#EF4444' : '#F59E0B');
-  const statusBg = isLowRisk ? 'rgba(16, 185, 129, 0.1)' : (isHighRisk ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)');
-
-  const signalsAnalyzed = verification.signalsAnalyzed || (verification.signals?.length || 0) + (verification.warnings?.length || 0) + 2;
-  const evidenceChecked = verification.evidenceChecked || (verification.signals?.length || 0);
-  const riskIndicators = verification.riskIndicators || (verification.warnings?.length || 0);
   const targetType = verification.targetType || verification.type || 'TARGET';
   const targetValue = verification.targetValue || verification.inputValue || '';
+  const isWebsite = (targetType || '').toLowerCase() === 'website';
 
-  const score = Math.max(0, Math.min(100, Number(verification.score) || 0));
+  const technicalStatus = verification.technicalStatus || (verification.riskLevel === 'LOW RISK' ? 'TECHNICAL CHECKS PASSED' : (verification.riskLevel === 'HIGH RISK' ? 'TECHNICAL ISSUES DETECTED' : 'TECHNICAL CHECKS PASSED'));
+  const isInvalidInput = technicalStatus === 'INVALID INPUT' || verification.riskLevel === 'INVALID INPUT';
+  const isTechnicalPass = technicalStatus === 'TECHNICAL CHECKS PASSED';
+  const isLowRisk = verification.riskLevel === 'LOW RISK';
+  const isHighRisk = verification.riskLevel === 'HIGH RISK' || technicalStatus === 'CONFIRMED THREAT';
+  
+  let StatusIcon = Shield;
+  let statusColor = '#F59E0B';
+  let statusBg = 'rgba(245, 158, 11, 0.1)';
+
+  if (isInvalidInput) {
+    StatusIcon = AlertCircle;
+    statusColor = '#94A3B8';
+    statusBg = 'rgba(148, 163, 184, 0.1)';
+  } else if (isTechnicalPass) {
+    StatusIcon = ShieldCheck;
+    statusColor = '#10B981';
+    statusBg = 'rgba(16, 185, 129, 0.1)';
+  } else if (isHighRisk) {
+    StatusIcon = ShieldAlert;
+    statusColor = '#EF4444';
+    statusBg = 'rgba(239, 68, 68, 0.1)';
+  }
+
+  const signalsAnalyzed = verification.signalsAnalyzed ?? ((verification.signals?.length || 0) + (verification.warnings?.length || 0));
+  const evidenceChecked = verification.evidenceChecked ?? (verification.signals?.length || 0);
+  const riskIndicators = verification.riskIndicators ?? (verification.warnings?.length || 0);
+
+  const score = Math.max(0, Math.min(100, Number(verification.score ?? verification.technicalHealthScore) || 0));
   // Circle circumference: 2 * PI * 42 ~= 264
   const circumference = 264;
   const strokeOffset = circumference - (score / 100) * circumference;
 
+  const getVerdictHeadline = () => {
+    const type = (targetType || '').toLowerCase();
+    if (isInvalidInput) {
+      return 'Invalid Input — Incomplete Format';
+    }
+    if (technicalStatus === 'TRANSPORT SECURITY WEAKNESS') {
+      return 'Transport Security Weakness — Unencrypted HTTP';
+    }
+    if (technicalStatus === 'CERTIFICATE VALIDATION FAILURE') {
+      return 'Certificate Validation Failure — Untrusted TLS';
+    }
+    if (technicalStatus === 'REACHABILITY FAILURE') {
+      return 'Host Reachability Failure — Server Unresponsive';
+    }
+    if (technicalStatus === 'DNS RESOLUTION FAILURE') {
+      return 'DNS Resolution Failure — Mail Server Missing';
+    }
+    if (technicalStatus === 'AUTHENTICATION POLICY WEAKNESS') {
+      return 'Authentication Policy Weakness — Partial Enforcement';
+    }
+    if (technicalStatus === 'SUSPICIOUS INDICATOR') {
+      return 'Suspicious Format Indicator Detected';
+    }
+
+    if (isWebsite) {
+      if (verification.reputationStatus === 'CHECKED' && verification.threatAssessmentStatus === 'NO KNOWN THREATS DETECTED') {
+        return 'Verified Low Threat — Technical Checks Passed';
+      }
+      if (isTechnicalPass) return 'Technical Baseline Passed — Reputation Unrated';
+      if (isHighRisk || verification.riskLevel === 'SUSPICIOUS') return 'Technical Security Issues Flagged';
+      return 'Technical Verification Incomplete';
+    }
+    if (type === 'email') {
+      if (isTechnicalPass || isLowRisk) return 'Domain Email Infrastructure Configured';
+      return 'Limited Verification — Exercise Caution';
+    }
+    if (type === 'phone') {
+      if (isTechnicalPass || isLowRisk) return 'Valid Numbering Plan Format — Caller Identity Unverified';
+      return 'Limited Verification — Exercise Caution';
+    }
+    if (isLowRisk || isTechnicalPass) {
+      return 'Technical Checks Passed';
+    }
+    if (isHighRisk || verification.riskLevel === 'SUSPICIOUS') {
+      return 'Critical Technical Risks Flagged';
+    }
+    return 'Limited Verification — Exercise Caution';
+  };
+
+  const getBadgeLabel = () => {
+    if (isInvalidInput) return 'INVALID INPUT';
+    return technicalStatus || verification.riskLevel || 'TECHNICAL CHECKS PASSED';
+  };
+
   const handleCopyReport = () => {
     const reportText = `[VerifyMe Audit Report]
 Target: ${targetValue} (${targetType.toUpperCase()})
-Trust Score: ${score}/100 [${verification.riskLevel}]
-Confidence: ${verification.confidence}%
+Technical Health Score: ${score}/100
+Technical Status: ${technicalStatus}
+Reputation Status: ${verification.reputationStatus || 'NOT CHECKED'}
+Threat Assessment: ${verification.threatAssessmentStatus || 'NOT CHECKED'}
+Threat Indicators: ${riskIndicators}
+Identity Verification: ${verification.identityStatus || 'NOT VERIFIED'}
+Evidence Completeness: ${verification.evidenceCompleteness ?? verification.confidence}%
 Signals Analyzed: ${signalsAnalyzed}
-Risk Indicators: ${riskIndicators}
 Summary: ${analysis.summary || 'N/A'}
 Recommended Action: ${analysis.recommendedAction || 'N/A'}
 Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engine' : 'Deterministic Technical Signal Engine'}`;
@@ -122,19 +199,36 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
           </svg>
           <div className="gauge-center-content">
             <span className="gauge-score-value" style={{ color: statusColor }}>{score}</span>
-            <span className="gauge-score-sub">OUT OF 100</span>
+            <span className="gauge-score-sub">TECHNICAL HEALTH</span>
           </div>
         </div>
 
         {/* Verdict & Engine Source */}
         <div className="audit-verdict-column">
-          <div className="risk-level-badge" style={{ backgroundColor: statusBg, borderColor: statusColor, color: statusColor }}>
-            <StatusIcon className="w-4 h-4" />
-            <span>{verification.riskLevel}</span>
+          <div className="verdict-badges-row">
+            <div className="risk-level-badge" style={{ backgroundColor: statusBg, borderColor: statusColor, color: statusColor }}>
+              <StatusIcon className="w-4 h-4" />
+              <span>{getBadgeLabel()}</span>
+            </div>
+
+            <div className="status-dimension-pill">
+              <span className="text-slate-400">REPUTATION:</span>
+              <span className="font-semibold text-slate-300">{verification.reputationStatus || 'NOT CHECKED'}</span>
+            </div>
+
+            <div className="status-dimension-pill">
+              <span className="text-slate-400">THREATS:</span>
+              <span className="font-semibold text-slate-300">{verification.threatAssessmentStatus || 'NOT CHECKED'}</span>
+            </div>
+
+            <div className="status-dimension-pill">
+              <span className="text-slate-400">IDENTITY:</span>
+              <span className="font-semibold text-slate-300">{verification.identityStatus || 'NOT VERIFIED'}</span>
+            </div>
           </div>
 
           <h3 className="verdict-headline">
-            {isLowRisk ? 'High Digital Trust Verified' : isHighRisk ? 'Critical Threat Patterns Flagged' : 'Moderate Caution Advisable'}
+            {getVerdictHeadline()}
           </h3>
 
           <div className="verdict-engine-source">
@@ -192,9 +286,11 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
             <Fingerprint className="w-4 h-4 text-teal-400" />
           </div>
           <div className="metric-cell-content">
-            <span className="cell-label">Confidence Index</span>
+            <span className="cell-label">Evidence Completeness</span>
             <span className="cell-value">
-              {typeof verification.confidence === 'number' ? `${verification.confidence}%` : String(verification.confidence || '95%')}
+              {typeof verification.evidenceCompleteness === 'number'
+                ? `${verification.evidenceCompleteness}%`
+                : (typeof verification.confidence === 'number' ? `${verification.confidence}%` : String(verification.confidence || '75%'))}
             </span>
           </div>
         </div>
@@ -294,7 +390,7 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
       </div>
 
       <div className="audit-disclaimer-note">
-        VerifyMe cryptographic intelligence provides deterministic technical reputation signals, not a legal warranty of identity or safety.
+        VerifyMe provides deterministic technical protocol validation and infrastructure checks. Technical validity does not verify individual identity, organization authenticity, or caller/sender legitimacy.
       </div>
     </div>
   );

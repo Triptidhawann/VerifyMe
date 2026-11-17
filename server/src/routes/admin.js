@@ -1,13 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 
-// @desc    Placeholder for admin routes
+// @desc    Administrative dashboard overview
 // @route   GET /api/admin
-// @access  Public
-router.get('/', (req, res) => {
+// @access  Protected (Requires authenticated Firebase session with ADMIN custom claim)
+router.get('/', protect, authorizeRoles('ADMIN'), (req, res) => {
   res.json({
     success: true,
-    message: '[Development Placeholder] Admin route exists. Logic to be implemented in future phases.'
+    message: '[VerifyMe Admin Portal] Administrative route accessed successfully.',
+    admin: {
+      uid: req.user.uid,
+      email: req.user.email,
+      role: req.user.role
+    }
   });
 });
 

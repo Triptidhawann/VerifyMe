@@ -51,12 +51,12 @@ const ExpandedHistory = () => {
   let filteredHistory = history.filter(item => {
     if (filterType !== 'all' && item.type !== filterType) return false;
     if (filterRisk !== 'all') {
-      if (filterRisk === 'low' && item.riskLevel !== 'LOW RISK') return false;
-      if (filterRisk === 'medium' && item.riskLevel !== 'MODERATE RISK') return false;
-      if (filterRisk === 'high' && item.riskLevel !== 'HIGH RISK') return false;
+      if (filterRisk === 'low' && item.riskLevel !== 'LOW RISK' && item.technicalStatus !== 'TECHNICAL CHECKS PASSED') return false;
+      if (filterRisk === 'medium' && item.riskLevel !== 'MODERATE RISK' && item.riskLevel !== 'LIMITED VERIFICATION') return false;
+      if (filterRisk === 'high' && item.riskLevel !== 'HIGH RISK' && item.technicalStatus !== 'CONFIRMED THREAT') return false;
     }
     if (searchQuery) {
-      if (!item.inputValue.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (!(item.inputValue || item.target || '').toLowerCase().includes(searchQuery.toLowerCase())) return false;
     }
     return true;
   });
@@ -65,9 +65,9 @@ const ExpandedHistory = () => {
     filteredHistory = [...filteredHistory].reverse();
   }
 
-  const getRiskIcon = (level) => {
-    if (level === 'LOW RISK') return <ShieldCheck size={20} style={{ color: '#10b981' }} />;
-    if (level === 'HIGH RISK') return <ShieldAlert size={20} style={{ color: '#ef4444' }} />;
+  const getRiskIcon = (level, techStatus) => {
+    if (level === 'LOW RISK' || techStatus === 'TECHNICAL CHECKS PASSED') return <ShieldCheck size={20} style={{ color: '#10b981' }} />;
+    if (level === 'HIGH RISK' || techStatus === 'CONFIRMED THREAT') return <ShieldAlert size={20} style={{ color: '#ef4444' }} />;
     return <Shield size={20} style={{ color: '#f59e0b' }} />;
   };
 
@@ -198,7 +198,7 @@ const ExpandedHistory = () => {
                 <tr key={item.id} onClick={() => setSelectedItem(item)} className="history-row">
                   <td className="risk-cell">
                     <div className="risk-badge" data-risk={item.riskLevel}>
-                      {getRiskIcon(item.riskLevel)}
+                      {getRiskIcon(item.riskLevel, item.technicalStatus)}
                       <span className="risk-text">{item.riskLevel}</span>
                     </div>
                   </td>
