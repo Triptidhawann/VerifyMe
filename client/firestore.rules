@@ -47,5 +47,17 @@ service cloud.firestore {
       // Clients are strictly forbidden from creating, altering, or deleting audit logs
       allow write: if false;
     }
+
+    // JobShield Investigation history: Strictly backend-authoritative!
+    match /users/{userId}/jobshield_investigations/{investigationId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      allow write: if false;
+    }
+
+    // CredentialCheck Investigation history: Strictly backend-authoritative!
+    match /users/{userId}/credentialcheck_investigations/{investigationId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      allow write: if false;
+    }
   }
 }

@@ -9,6 +9,8 @@ const errorHandler = require('./middleware/errorHandler');
 
 // Route files
 const verificationRoutes = require('./routes/verifications');
+const jobShieldRoutes = require('./routes/jobshield');
+const credentialCheckRoutes = require('./routes/credentialcheck');
 const reportRoutes = require('./routes/reports');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
@@ -69,7 +71,9 @@ app.use(cors({
   credentials: false // Bearer token authentication in Authorization header; no cookies needed
 }));
 
-// 4. Request body size limit: 16KB max to prevent memory exhaustion / DoS
+// 4. Request body size limit: 10MB for CredentialCheck & JobShield (document/image uploads), 16KB for other endpoints
+app.use('/api/credentialcheck', express.json({ limit: '10mb' }));
+app.use('/api/jobshield', express.json({ limit: '6mb' }));
 app.use(express.json({ limit: '16kb' }));
 
 // 5. Basic health check endpoint (mounted before rate limiter so health probes are not throttled)
@@ -86,6 +90,8 @@ app.use('/api', globalRateLimiter);
 
 // 7. API Routes
 app.use('/api/verifications', verificationRoutes);
+app.use('/api/jobshield', jobShieldRoutes);
+app.use('/api/credentialcheck', credentialCheckRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);

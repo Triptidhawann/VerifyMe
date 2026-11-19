@@ -1,5 +1,23 @@
 .profile-workspace {
   animation: fadeIn 0.4s ease-out;
+  padding-top: 1.5rem;
+}
+
+.workspace-header {
+  margin-bottom: 2rem;
+}
+
+.workspace-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #202923;
+  letter-spacing: -0.02em;
+}
+
+.workspace-header p {
+  font-size: 0.9375rem;
+  color: #526056;
+  margin-top: 0.25rem;
 }
 
 .settings-grid {
@@ -8,11 +26,18 @@
   gap: 24px;
 }
 
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .settings-panel {
-  background: var(--bg-secondary);
+  background: #FFFFFF;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
+  padding: 1.75rem;
+  box-shadow: 0 1px 3px rgba(23, 76, 60, 0.02);
 }
 
 .panel-header {
@@ -20,17 +45,17 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
-  color: var(--text-primary);
+  color: #202923;
 }
 
 .panel-header h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   margin: 0;
 }
 
 .panel-header svg {
-  color: var(--accent-primary);
+  color: var(--brand-forest);
 }
 
 .settings-form {
@@ -39,12 +64,17 @@
   gap: 20px;
 }
 
-/* Specific form overrides if needed, otherwise rely on index.css */
 .settings-form .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 0;
+}
+
+.settings-form label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #202923;
 }
 
 .input-with-icon-left {
@@ -56,93 +86,73 @@
 .input-with-icon-left svg {
   position: absolute;
   left: 12px;
-  color: var(--text-muted);
+  color: #7E8D82;
 }
 
 .input-with-icon-left input {
-  padding-left: 2.25rem;
+  padding-left: 40px !important;
+  width: 100%;
 }
 
-.settings-form small {
+.auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #EAF6ED;
+  color: #166534;
+  padding: 6px 12px;
+  border-radius: 9999px;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  font-weight: 700;
+  width: fit-content;
+  border: 1px solid #A7D8B4;
+}
+
+.auth-desc {
+  font-size: 0.8125rem;
+  color: #526056;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.session-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-default);
+  font-size: 0.875rem;
+}
+
+.session-stat:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: #526056;
+}
+
+.stat-value {
+  color: #202923;
+  font-weight: 600;
 }
 
 .success-message {
-  color: var(--success);
-  background: rgba(16, 185, 129, 0.1);
-  padding: 0.75rem 1rem;
+  padding: 10px 14px;
+  background: #EAF6ED;
+  color: #166534;
+  border: 1px solid #A7D8B4;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  text-align: center;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
-.security-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.security-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  background: var(--bg-surface);
+.error-message {
+  padding: 10px 14px;
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-}
-
-.sec-icon {
-  background: var(--bg-primary);
-  padding: 8px;
-  border-radius: 50%;
-  color: var(--accent-primary);
-  display: flex;
-  border: 1px solid var(--border-default);
-}
-
-.sec-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sec-text strong {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-
-.sec-text span {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.role-badge {
-  display: inline-block;
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--accent-primary);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.75rem;
-  align-self: flex-start;
-}
-
-.security-note {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  background: var(--bg-surface);
-  padding: 16px;
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--border-default);
-}
-
-@media (max-width: 768px) {
-  .settings-grid {
-    grid-template-columns: 1fr;
-  }
+  font-size: 0.8125rem;
+  font-weight: 600;
 }

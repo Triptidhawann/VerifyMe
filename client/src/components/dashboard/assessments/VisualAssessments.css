@@ -1,0 +1,465 @@
+/* ==========================================================================
+   VerifyMe Visual Assessments — Premium Forest Green & Warm Ivory Style
+   ========================================================================== */
+
+.visual-assessment-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.visual-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.visual-section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.visual-section-title {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #202923;
+}
+
+.visual-section-subtitle {
+  font-size: 0.75rem;
+  color: #7E8D82;
+}
+
+/* ==========================================================================
+   1. WEBSITE VISUAL JOURNEY PIPELINE
+   ========================================================================== */
+.website-journey-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  position: relative;
+}
+
+@media (max-width: 1024px) {
+  .website-journey-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .website-journey-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+}
+
+.journey-step-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0.875rem;
+  background: #FFFFFF;
+  border: 1px solid #DCE8DF;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(23, 76, 60, 0.02);
+}
+
+.journey-step-card:hover {
+  border-color: #BDCEBF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(23, 76, 60, 0.06);
+}
+
+.journey-step-card.passed {
+  border-color: #A7D8B4;
+  background: #EAF6ED;
+}
+
+.journey-step-card.warning {
+  border-color: #FDE68A;
+  background: #FEF3C7;
+}
+
+.journey-step-card.failed,
+.journey-step-card.blocked {
+  border-color: #FECACA;
+  background: #FEE2E2;
+}
+
+.journey-step-card.neutral {
+  border-color: #DCE8DF;
+  background: #FDFDFB;
+}
+
+.step-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.step-number-badge {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #7E8D82;
+  letter-spacing: 0.05em;
+}
+
+.step-status-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.step-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #202923;
+  line-height: 1.25;
+}
+
+.step-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.125rem;
+}
+
+.step-status-tag.passed { color: #166534; }
+.step-status-tag.warning { color: #92400E; }
+.step-status-tag.failed { color: #991B1B; }
+.step-status-tag.blocked { color: #991B1B; }
+.step-status-tag.neutral { color: #526056; }
+
+.step-detail-text {
+  font-size: 0.6875rem;
+  color: #526056;
+  line-height: 1.35;
+  margin-top: 0.2rem;
+}
+
+/* ==========================================================================
+   2. EMAIL VISUAL MATRIX
+   ========================================================================== */
+.email-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .email-matrix-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .email-matrix-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+}
+
+.matrix-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0.875rem;
+  background: #FFFFFF;
+  border: 1px solid #DCE8DF;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(23, 76, 60, 0.02);
+}
+
+.matrix-card:hover {
+  border-color: #BDCEBF;
+  transform: translateY(-1px);
+}
+
+.matrix-card.passed {
+  border-color: #A7D8B4;
+  background: #EAF6ED;
+}
+
+.matrix-card.warning {
+  border-color: #FDE68A;
+  background: #FEF3C7;
+}
+
+.matrix-card.failed {
+  border-color: #FECACA;
+  background: #FEE2E2;
+}
+
+.matrix-card.neutral {
+  border-color: #DCE8DF;
+  background: #FDFDFB;
+}
+
+.matrix-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.matrix-card-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #202923;
+}
+
+.matrix-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.matrix-status-pill.passed {
+  background: #EAF6ED;
+  color: #166534;
+  border: 1px solid #A7D8B4;
+}
+
+.matrix-status-pill.warning {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.matrix-status-pill.failed {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.matrix-status-pill.neutral {
+  background: #F6F5EF;
+  color: #526056;
+  border: 1px solid #DCE8DF;
+}
+
+.matrix-card-desc {
+  font-size: 0.75rem;
+  color: #526056;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   3. PHONE VISUAL ASSESSMENT
+   ========================================================================== */
+.phone-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .phone-matrix-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .phone-matrix-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+}
+
+.phone-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0.875rem;
+  background: #FFFFFF;
+  border: 1px solid #DCE8DF;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(23, 76, 60, 0.02);
+}
+
+.phone-card:hover {
+  border-color: #BDCEBF;
+  transform: translateY(-1px);
+}
+
+.phone-card.passed {
+  border-color: #A7D8B4;
+  background: #EAF6ED;
+}
+
+.phone-card.warning {
+  border-color: #FDE68A;
+  background: #FEF3C7;
+}
+
+.phone-card.failed {
+  border-color: #FECACA;
+  background: #FEE2E2;
+}
+
+.phone-card.neutral {
+  border-color: #DCE8DF;
+  background: #FDFDFB;
+}
+
+.phone-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.phone-card-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #202923;
+}
+
+.phone-card-desc {
+  font-size: 0.75rem;
+  color: #526056;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   4. PROGRESSIVE DISCLOSURE (COLLAPSIBLE ACCORDIONS)
+   ========================================================================== */
+.progressive-disclosure-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.progressive-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.progressive-toolbar-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7E8D82;
+}
+
+.progressive-toggle-all-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #174C3C;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.progressive-toggle-all-btn:hover {
+  color: #0F3328;
+  background: #EAE8DE;
+}
+
+.accordion-item {
+  border: 1px solid #DCE8DF;
+  background: #FFFFFF;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.accordion-item:hover {
+  border-color: #BDCEBF;
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: #202923;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.accordion-header:hover {
+  background: #F6F5EF;
+}
+
+.accordion-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.accordion-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accordion-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #202923;
+}
+
+.accordion-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: #F6F5EF;
+  color: #526056;
+  border: 1px solid #DCE8DF;
+}
+
+.accordion-chevron {
+  color: #7E8D82;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.accordion-chevron.open {
+  transform: rotate(180deg);
+  color: #174C3C;
+}
+
+.accordion-body {
+  padding: 0 1.25rem 1.25rem 1.25rem;
+  border-top: 1px solid #DCE8DF;
+  margin-top: -0.25rem;
+  padding-top: 1rem;
+}

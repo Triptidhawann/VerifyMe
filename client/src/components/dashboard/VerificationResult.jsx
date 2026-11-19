@@ -3,20 +3,17 @@ import {
   ShieldCheck, 
   ShieldAlert, 
   Shield, 
-  CheckCircle2, 
-  AlertTriangle, 
   RefreshCw, 
-  Activity, 
-  Database, 
-  Fingerprint, 
   Sparkles, 
   Server,
   Copy,
   Check,
-  AlertCircle,
-  HelpCircle,
-  ExternalLink
+  AlertCircle
 } from 'lucide-react';
+import WebsiteVisualJourney from './assessments/WebsiteVisualJourney';
+import EmailVisualMatrix from './assessments/EmailVisualMatrix';
+import PhoneVisualAssessment from './assessments/PhoneVisualAssessment';
+import ProgressiveDisclosure from './assessments/ProgressiveDisclosure';
 import './VerificationResult.css';
 
 const VerificationResult = ({ result, onVerifyAnother }) => {
@@ -36,7 +33,10 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
 
   const targetType = verification.targetType || verification.type || 'TARGET';
   const targetValue = verification.targetValue || verification.inputValue || '';
-  const isWebsite = (targetType || '').toLowerCase() === 'website';
+  const typeLower = (targetType || '').toLowerCase();
+  const isWebsite = typeLower === 'website';
+  const isEmail = typeLower === 'email';
+  const isPhone = typeLower === 'phone';
 
   const technicalStatus = verification.technicalStatus || (verification.riskLevel === 'LOW RISK' ? 'TECHNICAL CHECKS PASSED' : (verification.riskLevel === 'HIGH RISK' ? 'TECHNICAL ISSUES DETECTED' : 'TECHNICAL CHECKS PASSED'));
   const isInvalidInput = technicalStatus === 'INVALID INPUT' || verification.riskLevel === 'INVALID INPUT';
@@ -45,25 +45,28 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
   const isHighRisk = verification.riskLevel === 'HIGH RISK' || technicalStatus === 'CONFIRMED THREAT';
   
   let StatusIcon = Shield;
-  let statusColor = '#F59E0B';
-  let statusBg = 'rgba(245, 158, 11, 0.1)';
+  let statusColor = '#B45309';
+  let statusBg = '#FEF3C7';
+  let statusBorder = '#FDE68A';
 
   if (isInvalidInput) {
     StatusIcon = AlertCircle;
-    statusColor = '#94A3B8';
-    statusBg = 'rgba(148, 163, 184, 0.1)';
-  } else if (isTechnicalPass) {
+    statusColor = '#526056';
+    statusBg = '#F6F5EF';
+    statusBorder = '#DCE8DF';
+  } else if (isTechnicalPass || isLowRisk) {
     StatusIcon = ShieldCheck;
-    statusColor = '#10B981';
-    statusBg = 'rgba(16, 185, 129, 0.1)';
+    statusColor = '#15803D';
+    statusBg = '#EAF6ED';
+    statusBorder = '#A7D8B4';
   } else if (isHighRisk) {
     StatusIcon = ShieldAlert;
-    statusColor = '#EF4444';
-    statusBg = 'rgba(239, 68, 68, 0.1)';
+    statusColor = '#DC2626';
+    statusBg = '#FEE2E2';
+    statusBorder = '#FECACA';
   }
 
   const signalsAnalyzed = verification.signalsAnalyzed ?? ((verification.signals?.length || 0) + (verification.warnings?.length || 0));
-  const evidenceChecked = verification.evidenceChecked ?? (verification.signals?.length || 0);
   const riskIndicators = verification.riskIndicators ?? (verification.warnings?.length || 0);
 
   const score = Math.max(0, Math.min(100, Number(verification.score ?? verification.technicalHealthScore) || 0));
@@ -72,7 +75,6 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
   const strokeOffset = circumference - (score / 100) * circumference;
 
   const getVerdictHeadline = () => {
-    const type = (targetType || '').toLowerCase();
     if (isInvalidInput) {
       return 'Invalid Input — Incomplete Format';
     }
@@ -103,11 +105,11 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
       if (isHighRisk || verification.riskLevel === 'SUSPICIOUS') return 'Technical Security Issues Flagged';
       return 'Technical Verification Incomplete';
     }
-    if (type === 'email') {
+    if (isEmail) {
       if (isTechnicalPass || isLowRisk) return 'Domain Email Infrastructure Configured';
       return 'Limited Verification — Exercise Caution';
     }
-    if (type === 'phone') {
+    if (isPhone) {
       if (isTechnicalPass || isLowRisk) return 'Valid Numbering Plan Format — Caller Identity Unverified';
       return 'Limited Verification — Exercise Caution';
     }
@@ -120,10 +122,68 @@ const VerificationResult = ({ result, onVerifyAnother }) => {
     return 'Limited Verification — Exercise Caution';
   };
 
+  const getHumanReadableExplanation = () => {
+    if (isInvalidInput) {
+      return 'The entered identifier is structurally incomplete or invalid. Please provide a complete, properly formatted value to evaluate technical security.';
+    }
+
+    if (isWebsite) {
+      if (technicalStatus === 'TRANSPORT SECURITY WEAKNESS') {
+        return 'The website operates over an unencrypted HTTP connection. Sensitive data transmitted to this server may be intercepted or modified in transit.';
+      }
+      if (technicalStatus === 'CERTIFICATE VALIDATION FAILURE') {
+        return 'The website failed TLS certificate verification. The certificate is either expired, self-signed, or untrusted by public certificate authorities.';
+      }
+      if (technicalStatus === 'REACHABILITY FAILURE') {
+        return 'The server failed to respond to network reachability queries. Confirm whether the domain and web server are currently online.';
+      }
+      if (isHighRisk || verification.riskLevel === 'HIGH RISK' || technicalStatus === 'CONFIRMED THREAT') {
+        return 'Critical technical or security vulnerabilities were identified on this endpoint. Proceed with extreme caution.';
+      }
+      if (isTechnicalPass || isLowRisk) {
+        return 'The website responded successfully and passed all technical connection-security checks (DNS, HTTPS, and valid TLS). However, its organizational identity and potential threat reputation were not independently evaluated.';
+      }
+      return 'Basic connectivity was established, but some configuration aspects could not be fully verified.';
+    }
+
+    if (isEmail) {
+      if (technicalStatus === 'DNS RESOLUTION FAILURE') {
+        return 'The domain does not have active mail exchange (MX) servers configured. Emails sent to this domain will bounce or fail delivery.';
+      }
+      if (technicalStatus === 'AUTHENTICATION POLICY WEAKNESS') {
+        return 'The domain can receive email and publishes an SPF record, but its DMARC policy is set to monitoring-only (p=none). Spoofed emails are not blocked at the gateway.';
+      }
+      if (isTechnicalPass || isLowRisk) {
+        return 'The domain has active mail exchange servers and publishes anti-spoofing policies. However, this verifies domain infrastructure only and does not prove the authenticity of individual message senders.';
+      }
+      return 'The email format is valid, but the domain email infrastructure has configuration gaps or could not be completely validated.';
+    }
+
+    if (isPhone) {
+      if (technicalStatus === 'SUSPICIOUS INDICATOR') {
+        return 'This number is allocated in a premium-rate toll prefix associated with elevated toll charges and telemarketing billing schemes.';
+      }
+      const isAmbiguous = (verification.warnings || []).some(w => w.toLowerCase().includes('matches multiple'));
+      if (isAmbiguous) {
+        return 'This number matches multiple national numbering plans without international prefix context. Please include a country code (+1, +44, +91) for exact verification.';
+      }
+      if (isTechnicalPass || isLowRisk) {
+        return 'This number conforms to authoritative national and international (E.164) numbering plans. However, format validity alone does not verify who owns the number or who is placing the call.';
+      }
+      return 'This phone number has incomplete formatting or cannot be verified against authoritative numbering registries.';
+    }
+
+    return analysis.summary || 'Technical protocol checks completed.';
+  };
+
   const getBadgeLabel = () => {
     if (isInvalidInput) return 'INVALID INPUT';
     return technicalStatus || verification.riskLevel || 'TECHNICAL CHECKS PASSED';
   };
+
+  const completenessDisplay = typeof verification.evidenceCompleteness === 'number'
+    ? `${verification.evidenceCompleteness}%`
+    : (typeof verification.confidence === 'number' ? `${verification.confidence}%` : String(verification.confidence || '75%'));
 
   const handleCopyReport = () => {
     const reportText = `[VerifyMe Audit Report]
@@ -134,11 +194,20 @@ Reputation Status: ${verification.reputationStatus || 'NOT CHECKED'}
 Threat Assessment: ${verification.threatAssessmentStatus || 'NOT CHECKED'}
 Threat Indicators: ${riskIndicators}
 Identity Verification: ${verification.identityStatus || 'NOT VERIFIED'}
-Evidence Completeness: ${verification.evidenceCompleteness ?? verification.confidence}%
+Evidence Completeness: ${completenessDisplay}
 Signals Analyzed: ${signalsAnalyzed}
-Summary: ${analysis.summary || 'N/A'}
+Summary: ${analysis.summary || getHumanReadableExplanation()}
 Recommended Action: ${analysis.recommendedAction || 'N/A'}
-Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engine' : 'Deterministic Technical Signal Engine'}`;
+Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engine' : 'Deterministic Technical Signal Engine'}
+
+--- DETERMINISTIC FINDINGS ---
+${((analysis.whyScore && analysis.whyScore.length > 0) ? analysis.whyScore : (verification.signals || [])).map(s => `• ${s}`).join('\n') || 'None recorded'}
+
+--- IDENTIFIED RISK FACTORS ---
+${((analysis.riskFactors && analysis.riskFactors.length > 0) ? analysis.riskFactors : (verification.warnings || [])).map(w => `! ${w}`).join('\n') || 'None recorded'}
+
+--- SCOPE BOUNDARIES & LIMITATIONS ---
+${(verification.limitations || []).map(l => `? ${l}`).join('\n') || 'None recorded'}`;
 
     navigator.clipboard.writeText(reportText);
     setCopied(true);
@@ -161,7 +230,7 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
             onClick={handleCopyReport}
             title="Copy audit report to clipboard"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-[#15803D]" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Audit Copied!' : 'Export Report'}</span>
           </button>
 
@@ -176,7 +245,7 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
         </div>
       </div>
 
-      {/* Main Score & Risk Index Dashboard */}
+      {/* Main Score & Risk Index Dashboard (Instant Verdict Hero) */}
       <div className="audit-score-card">
         {/* Radial Meter */}
         <div className="gauge-meter-wrapper">
@@ -199,31 +268,36 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
           </svg>
           <div className="gauge-center-content">
             <span className="gauge-score-value" style={{ color: statusColor }}>{score}</span>
-            <span className="gauge-score-sub">TECHNICAL HEALTH</span>
+            <span className="gauge-score-sub">HEALTH SCORE</span>
           </div>
         </div>
 
-        {/* Verdict & Engine Source */}
+        {/* Verdict & Context */}
         <div className="audit-verdict-column">
           <div className="verdict-badges-row">
-            <div className="risk-level-badge" style={{ backgroundColor: statusBg, borderColor: statusColor, color: statusColor }}>
+            <div className="risk-level-badge" style={{ backgroundColor: statusBg, borderColor: statusBorder, color: statusColor }}>
               <StatusIcon className="w-4 h-4" />
               <span>{getBadgeLabel()}</span>
             </div>
 
             <div className="status-dimension-pill">
-              <span className="text-slate-400">REPUTATION:</span>
-              <span className="font-semibold text-slate-300">{verification.reputationStatus || 'NOT CHECKED'}</span>
+              <span className="pill-meta-label">REPUTATION:</span>
+              <span className="pill-meta-val">{verification.reputationStatus || 'NOT CHECKED'}</span>
             </div>
 
             <div className="status-dimension-pill">
-              <span className="text-slate-400">THREATS:</span>
-              <span className="font-semibold text-slate-300">{verification.threatAssessmentStatus || 'NOT CHECKED'}</span>
+              <span className="pill-meta-label">THREATS:</span>
+              <span className="pill-meta-val">{verification.threatAssessmentStatus || 'NOT CHECKED'}</span>
             </div>
 
             <div className="status-dimension-pill">
-              <span className="text-slate-400">IDENTITY:</span>
-              <span className="font-semibold text-slate-300">{verification.identityStatus || 'NOT VERIFIED'}</span>
+              <span className="pill-meta-label">IDENTITY:</span>
+              <span className="pill-meta-val">{verification.identityStatus || 'NOT VERIFIED'}</span>
+            </div>
+
+            <div className="status-dimension-pill">
+              <span className="pill-meta-label">COMPLETENESS:</span>
+              <span className="pill-meta-val">{completenessDisplay}</span>
             </div>
           </div>
 
@@ -231,15 +305,19 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
             {getVerdictHeadline()}
           </h3>
 
+          <p className="verdict-human-summary">
+            {getHumanReadableExplanation()}
+          </p>
+
           <div className="verdict-engine-source">
             {analysis.source === 'ai' ? (
               <span className="source-chip ai">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span>AI-Assisted Threat Interpretation (Groq)</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#174C3C]" />
+                <span>AI Threat Interpretation (Groq)</span>
               </span>
             ) : (
               <span className="source-chip deterministic">
-                <Server className="w-3.5 h-3.5 text-slate-400" />
+                <Server className="w-3.5 h-3.5 text-[#526056]" />
                 <span>Deterministic Signal Verification</span>
               </span>
             )}
@@ -247,148 +325,34 @@ Audit Engine: ${analysis.source === 'ai' ? 'Groq AI + Deterministic Signal Engin
         </div>
       </div>
 
-      {/* 4-Metric Tactical Grid */}
-      <div className="audit-metrics-grid">
-        <div className="metric-cell">
-          <div className="metric-cell-icon">
-            <Activity className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="metric-cell-content">
-            <span className="cell-label">Signals Analyzed</span>
-            <span className="cell-value">{String(signalsAnalyzed).padStart(2, '0')}</span>
-          </div>
-        </div>
-
-        <div className="metric-cell">
-          <div className="metric-cell-icon">
-            <Database className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="metric-cell-content">
-            <span className="cell-label">Evidence Checked</span>
-            <span className="cell-value">{String(evidenceChecked).padStart(2, '0')}</span>
-          </div>
-        </div>
-
-        <div className={`metric-cell ${riskIndicators > 0 ? 'warning' : ''}`}>
-          <div className="metric-cell-icon">
-            <AlertTriangle className={`w-4 h-4 ${riskIndicators > 0 ? 'text-amber-400' : 'text-slate-400'}`} />
-          </div>
-          <div className="metric-cell-content">
-            <span className="cell-label">Risk Indicators</span>
-            <span className={`cell-value ${riskIndicators > 0 ? 'text-amber-400' : ''}`}>
-              {String(riskIndicators).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-
-        <div className="metric-cell">
-          <div className="metric-cell-icon">
-            <Fingerprint className="w-4 h-4 text-teal-400" />
-          </div>
-          <div className="metric-cell-content">
-            <span className="cell-label">Evidence Completeness</span>
-            <span className="cell-value">
-              {typeof verification.evidenceCompleteness === 'number'
-                ? `${verification.evidenceCompleteness}%`
-                : (typeof verification.confidence === 'number' ? `${verification.confidence}%` : String(verification.confidence || '75%'))}
-            </span>
-          </div>
-        </div>
+      {/* Visual Assessment Overview (Modality-Specific) */}
+      <div className="visual-assessment-container">
+        {isWebsite && <WebsiteVisualJourney verification={verification} />}
+        {isEmail && <EmailVisualMatrix verification={verification} />}
+        {isPhone && <PhoneVisualAssessment verification={verification} />}
       </div>
 
-      {/* Synthesis & Explanations Panel */}
-      <div className="audit-findings-section">
-        {analysis.summary && (
-          <div className="findings-summary-box">
-            <span className="section-micro-label">EXECUTIVE SUMMARY</span>
-            <p className="summary-paragraph">{analysis.summary}</p>
+      {/* Prominent Recommended Action */}
+      {analysis.recommendedAction && (
+        <div className="recommended-action-hero">
+          <div className="recommended-action-badge">
+            <ShieldCheck className="w-4 h-4 text-[#174C3C]" />
+            <span>RECOMMENDED NEXT STEP</span>
           </div>
-        )}
-
-        <div className="findings-columns-grid">
-          {/* Key Findings */}
-          {analysis.whyScore && analysis.whyScore.length > 0 && (
-            <div className="findings-card">
-              <div className="card-header-row">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span className="card-title">Key Deterministic Findings</span>
-              </div>
-              <ul className="findings-list">
-                {analysis.whyScore.map((reason, idx) => (
-                  <li key={`why-${idx}`}>{reason}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Risk Factors */}
-          {analysis.riskFactors && analysis.riskFactors.length > 0 && (
-            <div className="findings-card risk">
-              <div className="card-header-row">
-                <AlertCircle className="w-4 h-4 text-rose-400" />
-                <span className="card-title text-rose-300">Identified Risk Factors</span>
-              </div>
-              <ul className="findings-list risk">
-                {analysis.riskFactors.map((factor, idx) => (
-                  <li key={`risk-${idx}`}>{factor}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Precautions */}
-          {analysis.precautions && analysis.precautions.length > 0 && (
-            <div className="findings-card">
-              <div className="card-header-row">
-                <Shield className="w-4 h-4 text-indigo-400" />
-                <span className="card-title">Recommended Safety Measures</span>
-              </div>
-              <ul className="findings-list">
-                {analysis.precautions.map((precaution, idx) => (
-                  <li key={`prec-${idx}`}>{precaution}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <p className="recommended-action-text">{analysis.recommendedAction}</p>
         </div>
+      )}
 
-        {/* Action Callout */}
-        {analysis.recommendedAction && (
-          <div className="recommended-callout-box">
-            <div className="callout-badge">
-              <ShieldCheck className="w-4 h-4 text-indigo-400" />
-              <span>RECOMMENDED ACTION</span>
-            </div>
-            <p className="callout-text">{analysis.recommendedAction}</p>
-          </div>
-        )}
+      {/* Progressive Disclosure (Collapsible Audit Accordions) */}
+      <ProgressiveDisclosure 
+        whyScore={analysis.whyScore || []}
+        riskFactors={analysis.riskFactors || []}
+        signals={verification.signals || []}
+        warnings={verification.warnings || []}
+        limitations={verification.limitations || []}
+      />
 
-        {/* Analysis Breakdown Pass/Risk Badges */}
-        <div className="evidence-breakdown-box">
-          <span className="section-micro-label">TECHNICAL EVIDENCE RECORD</span>
-          <div className="evidence-tags-grid">
-            {result.signals && result.signals.map((sig, i) => (
-              <div className="evidence-tag pass" key={`sig-${i}`}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{typeof sig === 'string' ? sig : 'Evidence Signal Validated'}</span>
-              </div>
-            ))}
-            {result.warnings && result.warnings.map((warn, i) => (
-              <div className="evidence-tag warn" key={`warn-${i}`}>
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>{typeof warn === 'string' ? warn : 'Risk Anomaly Flagged'}</span>
-              </div>
-            ))}
-            {result.limitations && result.limitations.map((lim, i) => (
-              <div className="evidence-tag lim" key={`lim-${i}`}>
-                <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>{typeof lim === 'string' ? lim : 'Limitation'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      {/* Disclaimer */}
       <div className="audit-disclaimer-note">
         VerifyMe provides deterministic technical protocol validation and infrastructure checks. Technical validity does not verify individual identity, organization authenticity, or caller/sender legitimacy.
       </div>

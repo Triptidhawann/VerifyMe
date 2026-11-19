@@ -5,6 +5,8 @@ import { AuthProvider } from './context/AuthContext';
 import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import JobShieldPage from './pages/JobShieldPage';
+import CredentialCheckPage from './pages/CredentialCheckPage';
 import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -24,6 +26,8 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/jobshield" element={<JobShieldPage />} />
+            <Route path="/credentialcheck" element={<CredentialCheckPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>

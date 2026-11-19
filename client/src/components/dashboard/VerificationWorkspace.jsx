@@ -8,7 +8,6 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   ArrowRight,
-  Sparkles,
   Zap,
   X,
   Server
@@ -80,71 +79,47 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
       cardRef.current.style.setProperty('--mouse-y', `${y}px`);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    const node = cardRef.current;
+    if (node) {
+      node.addEventListener('mousemove', handleMouseMove);
+    }
+    return () => {
+      if (node) {
+        node.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
   }, []);
 
-  // Step progression during analysis
-  useEffect(() => {
-    if (viewState !== 'analyzing') {
-      setActiveStepIndex(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setActiveStepIndex(prev => (prev < SCAN_STEPS.length - 1 ? prev + 1 : prev));
-    }, 450);
-    return () => clearInterval(interval);
-  }, [viewState]);
-
-  const activeTabData = TABS.find(t => t.id === activeTab);
-
-  const handleTabChange = (id) => {
-    setActiveTab(id);
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
     setInputValue('');
     setError('');
-    setViewState('idle');
-    setResult(null);
   };
 
-  const handlePresetSelect = (val) => {
-    setInputValue(val);
-    setError('');
+  const handlePresetSelect = (preset) => {
+    setInputValue(preset);
   };
 
-  const validateInput = () => {
-    if (!inputValue.trim()) return 'Please input an entity to inspect.';
-    
-    if (activeTab === 'email') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(inputValue.trim())) return 'Please enter a valid RFC-compliant email address.';
-    }
-    
-    if (activeTab === 'website') {
-      try {
-        new URL(inputValue.startsWith('http') ? inputValue.trim() : `https://${inputValue.trim()}`);
-      } catch (e) {
-        return 'Please enter a valid website hostname or URL.';
-      }
-    }
-
-    if (activeTab === 'phone') {
-      if (!/\d/.test(inputValue)) return 'Please enter a valid phone number containing numeric digits.';
-    }
-
-    return null;
-  };
+  const activeTabData = TABS.find(t => t.id === activeTab) || TABS[0];
 
   const handleVerify = async (e) => {
     if (e) e.preventDefault();
-    setError('');
-    
-    const validationError = validateInput();
-    if (validationError) {
-      setError(validationError);
+    if (!inputValue || !inputValue.trim()) {
+      setError('Please provide an identifier to verify.');
       return;
     }
 
+    setError('');
     setViewState('analyzing');
+    setActiveStepIndex(0);
+
+    // Staged step progression
+    const stepInterval = setInterval(() => {
+      setActiveStepIndex(prev => {
+        if (prev < SCAN_STEPS.length - 1) return prev + 1;
+        return prev;
+      });
+    }, 450);
 
     try {
       let token = null;
@@ -158,16 +133,16 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
         token
       });
       
+      clearInterval(stepInterval);
       setResult(analysisResult);
       setViewState('result');
       
-      // Verification was authoritatively saved to Firestore by the backend.
-      // Trigger parent component refresh so HistoryPanel reflects the new record.
       if (onVerificationComplete) {
         onVerificationComplete();
       }
       
     } catch (err) {
+      clearInterval(stepInterval);
       setError(err.message || 'Verification pipeline encountered a connectivity disruption. Please retry.');
       setViewState('idle');
     }
@@ -223,7 +198,7 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
               
               {/* Quick Fill Presets */}
               <div className="quick-presets-row">
-                <span className="presets-label">Sample Presets:</span>
+                <span className="presets-label">Quick Samples:</span>
                 {activeTabData.presets.map((preset, idx) => (
                   <button
                     key={idx}
@@ -239,9 +214,9 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
 
             <div className="workspace-input-container">
               <div className="input-target-icon">
-                {activeTab === 'phone' && <Phone className="w-5 h-5 text-indigo-400" />}
-                {activeTab === 'email' && <Mail className="w-5 h-5 text-indigo-400" />}
-                {activeTab === 'website' && <Globe className="w-5 h-5 text-indigo-400" />}
+                {activeTab === 'phone' && <Phone className="w-5 h-5 text-[#174C3C]" />}
+                {activeTab === 'email' && <Mail className="w-5 h-5 text-[#174C3C]" />}
+                {activeTab === 'website' && <Globe className="w-5 h-5 text-[#174C3C]" />}
               </div>
 
               <input
@@ -266,13 +241,13 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
 
               <button type="submit" className="workspace-submit-btn">
                 <span>Analyze Entity</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
 
             {error && (
               <div className="workspace-error-banner">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <AlertTriangle className="w-4 h-4 shrink-0 text-[#B45309]" />
                 <span>{error}</span>
               </div>
             )}
@@ -281,15 +256,15 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
           {/* Feature highlights bar */}
           <div className="workspace-feature-strip">
             <div className="feature-pill">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-[#15803D]" />
               <span>Full E.164 National/International Invariance</span>
             </div>
             <div className="feature-pill">
-              <Server className="w-4 h-4 text-indigo-400" />
+              <Server className="w-4 h-4 text-[#174C3C]" />
               <span>Authoritative DNS & MX Querying</span>
             </div>
             <div className="feature-pill">
-              <Zap className="w-4 h-4 text-blue-400" />
+              <Zap className="w-4 h-4 text-[#174C3C]" />
               <span>Deterministic Fail-Safe Fallbacks</span>
             </div>
           </div>
@@ -305,7 +280,7 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
             <div className="radar-ring r3" />
             <div className="radar-sweep" />
             <div className="radar-core-icon">
-              <Search className="w-8 h-8 text-indigo-400 animate-pulse" />
+              <Search className="w-8 h-8 text-[#174C3C] animate-pulse" />
             </div>
           </div>
 
@@ -313,7 +288,7 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
             <span className="analyzing-pill">Telemetry Scan in Progress</span>
             <h3 className="analyzing-target-text">{inputValue}</h3>
             <p className="analyzing-target-sub">
-              Executing multi-stage deterministic signal extraction & AI threat synthesis...
+              Executing multi-stage deterministic signal extraction & threat synthesis...
             </p>
           </div>
 
@@ -328,7 +303,7 @@ const VerificationWorkspace = ({ onVerificationComplete }) => {
                 >
                   <div className="step-indicator">
                     {isDone ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
                     ) : (
                       <span className="step-dot" />
                     )}
