@@ -29,9 +29,17 @@ app.use(helmet({
 }));
 
 // 3. Strict CORS configuration
-// Support comma-separated ALLOWED_ORIGINS, FRONTEND_URL, NETLIFY_SITE_URL, and local dev ports
+// Support official production origin https://verifyme.netlify.app, dev ports, and Netlify deploy previews
 const parseAllowedOrigins = () => {
-  const origins = new Set(['http://localhost:5173', 'http://localhost:5174']);
+  const origins = new Set([
+    'https://verifyme.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:3000'
+  ]);
 
   if (process.env.ALLOWED_ORIGINS) {
     process.env.ALLOWED_ORIGINS.split(',').forEach((orig) => {
@@ -48,28 +56,48 @@ const parseAllowedOrigins = () => {
     origins.add(process.env.NETLIFY_SITE_URL.trim());
   }
 
+  if (process.env.URL) {
+    origins.add(process.env.URL.trim());
+  }
+
+  if (process.env.DEPLOY_PRIME_URL) {
+    origins.add(process.env.DEPLOY_PRIME_URL.trim());
+  }
+
+  if (process.env.DEPLOY_URL) {
+    origins.add(process.env.DEPLOY_URL.trim());
+  }
+
   // Normalize: trim and strip trailing slashes
   return Array.from(origins)
     .map((o) => (o.endsWith('/') ? o.slice(0, -1) : o))
     .filter(Boolean);
 };
 
-const allowedOrigins = parseAllowedOrigins();
-
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     // Non-browser requests (e.g. curl, CLI, server-to-server, unit tests) send no Origin header
     if (!origin) return callback(null, true);
 
     const cleanOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    const allowedOrigins = parseAllowedOrigins();
     if (allowedOrigins.includes(origin) || allowedOrigins.includes(cleanOrigin)) {
       return callback(null, true);
     }
 
-    return callback(new Error(`Not allowed by CORS: Origin '${origin}' is not authorized.`));
+    const corsErr = new Error(`Not allowed by CORS: Origin '${origin}' is not authorized.`);
+    corsErr.status = 403;
+    corsErr.statusCode = 403;
+    return callback(corsErr);
   },
-  credentials: false // Bearer token authentication in Authorization header; no cookies needed
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
+  credentials: false, // Bearer token authentication in Authorization header; no cookies needed
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
 
 // 4. Request body size limit: 10MB for CredentialCheck & JobShield (document/image uploads), 16KB for other endpoints
 app.use('/api/credentialcheck', express.json({ limit: '10mb' }));

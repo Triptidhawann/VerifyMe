@@ -25,32 +25,50 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        const defaultProfile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          emailVerified: firebaseUser.emailVerified,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          role: 'USER'
+        };
+
         try {
           // Fetch additional user profile data from Firestore
           const docRef = doc(db, 'users', firebaseUser.uid);
           const docSnap = await getDoc(docRef);
           
           if (docSnap.exists()) {
+            const profileData = docSnap.data();
             setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              emailVerified: firebaseUser.emailVerified,
-              displayName: firebaseUser.displayName,
-              ...docSnap.data()
+              ...defaultProfile,
+              ...profileData,
+              displayName: profileData.name || firebaseUser.displayName || defaultProfile.displayName
             });
           } else {
-            // Fallback if Firestore doc doesn't exist yet
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              emailVerified: firebaseUser.emailVerified,
-              displayName: firebaseUser.displayName,
-              role: 'USER'
-            });
+            // Profile document doesn't exist yet: lazily auto-create it for existing users
+            try {
+              await setDoc(docRef, {
+                uid: firebaseUser.uid,
+                name: defaultProfile.name,
+                email: firebaseUser.email,
+                role: 'USER',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            } catch (createErr) {
+              console.warn('[AuthContext] Profile document auto-creation notice:', createErr.message);
+            }
+
+            // Fallback user state with default profile
+            setUser(defaultProfile);
           }
         } catch (error) {
-          console.error("Error fetching user profile:", error);
-          setUser(null);
+          console.warn('[AuthContext] Profile document fetch notice (falling back to Auth session):', error.message || error);
+          // Graceful fallback: Do NOT wipe the user session!
+          // Retain authenticated state derived directly from verified Firebase Auth session
+          setUser(defaultProfile);
         }
       } else {
         setUser(null);

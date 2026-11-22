@@ -130,7 +130,16 @@ const investigateJob = async (req, res, next) => {
       createdAtIso: serverTimestampIso
     };
 
-    if (!hasCredentials && process.env.NODE_ENV !== 'production') {
+    if (!hasCredentials) {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(500).json({
+          success: false,
+          error: 'JobShield investigation analysis succeeded, but authoritative persistence to database failed: FIREBASE_SERVICE_ACCOUNT is not configured in Netlify environment.',
+          code: 'PERSISTENCE_FAILED',
+          persisted: false
+        });
+      }
+
       console.warn(
         '\n⚠️ [VerifyMe JobShield Dev Notice] Firebase service account credentials not found in server/.env.\n' +
         '   Investigation completed successfully, but Firestore persistence was skipped in local dev.\n'
@@ -203,31 +212,41 @@ const getJobShieldHistory = async (req, res, next) => {
       isMockDb
     );
 
-    if (!hasCredentials && process.env.NODE_ENV !== 'production') {
+    if (!hasCredentials) {
       return res.status(200).json({
         success: true,
-        history: []
+        history: [],
+        warning: 'Firebase service account credentials not configured in environment.'
       });
     }
 
     const firestoreDb = (req.app && req.app.get('firestoreDb')) || req.firestoreDb || admin.firestore();
-    const snapshot = await firestoreDb
-      .collection('users')
-      .doc(req.user.uid)
-      .collection('jobshield_investigations')
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
+    try {
+      const snapshot = await firestoreDb
+        .collection('users')
+        .doc(req.user.uid)
+        .collection('jobshield_investigations')
+        .orderBy('createdAt', 'desc')
+        .limit(50)
+        .get();
 
-    const history = [];
-    snapshot.forEach(doc => {
-      history.push({ id: doc.id, ...doc.data() });
-    });
+      const history = [];
+      snapshot.forEach(doc => {
+        history.push({ id: doc.id, ...doc.data() });
+      });
 
-    return res.status(200).json({
-      success: true,
-      history
-    });
+      return res.status(200).json({
+        success: true,
+        history
+      });
+    } catch (dbErr) {
+      console.warn('[JobShield] Firestore history query failed:', dbErr.message);
+      return res.status(200).json({
+        success: true,
+        history: [],
+        warning: 'Firestore history query failed: ' + dbErr.message
+      });
+    }
   } catch (error) {
     console.error('[JobShield] Error fetching history:', error);
     next(error);

@@ -63,8 +63,8 @@ describe('Batch 2B: API Security, Production Reliability & End-to-End Verificati
     const res = await fetch(`${baseUrl}/api/health`, {
       headers: { Origin: 'https://evil-hacker.com' }
     });
-    // CORS middleware halts execution for untrusted origins
-    assert.strictEqual(res.status, 500);
+    // CORS middleware halts execution for untrusted origins with 403 Forbidden
+    assert.strictEqual(res.status, 403);
     const body = await res.json();
     assert.match(body.error, /Not allowed by CORS/);
     assert.strictEqual(res.headers.get('access-control-allow-origin'), null);
@@ -74,7 +74,7 @@ describe('Batch 2B: API Security, Production Reliability & End-to-End Verificati
     const res = await fetch(`${baseUrl}/api/health`, {
       headers: { Origin: 'https://phishing-site.netlify.app' }
     });
-    assert.strictEqual(res.status, 500);
+    assert.strictEqual(res.status, 403);
     const body = await res.json();
     assert.match(body.error, /Not allowed by CORS/);
   });

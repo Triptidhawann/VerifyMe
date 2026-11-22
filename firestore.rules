@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profiles collection
+    match /users/{userId} {
+      // Users can read their own profile; admins with verified custom claim can read any profile
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      
+      // Profile creation:
+      // 1. Authenticated user matching userId
+      // 2. Strict field whitelist: uid, name, email, role, createdAt, updatedAt
+      // 3. Document payload uid must match auth uid
+      // 4. Role must strictly be 'USER' on creation (no self-promotion to ADMIN)
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.keys().hasOnly(['uid', 'name', 'email', 'role', 'createdAt', 'updatedAt'])
+                    && request.resource.data.uid == userId
+                    && request.resource.data.role == 'USER';
+      
+      // Profile update:
+      // 1. Authenticated user matching userId
+      // 2. Role cannot be changed (must equal existing role)
+      // 3. UID cannot be changed
+      // 4. Restrict updatable fields strictly to 'name' and 'updatedAt'
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt']);
+                    
+      // Prevent client-side profile deletion (must go through authenticated server deletion workflow)
+      allow delete: if false; 
+    }
+    
+    // Verification history: Strictly backend-authoritative!
+    // All creation, modification, and deletion are handled server-side via Firebase Admin SDK.
+    match /users/{userId}/verifications/{verificationId} {
+      // Users can read only their own history; admins with verified custom claim can read
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      
+      // Clients are strictly forbidden from creating, altering, or deleting audit logs
+      allow write: if false;
+    }
+
+    // JobShield Investigation history: Strictly backend-authoritative!
+    match /users/{userId}/jobshield_investigations/{investigationId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      allow write: if false;
+    }
+
+    // CredentialCheck Investigation history: Strictly backend-authoritative!
+    match /users/{userId}/credentialcheck_investigations/{investigationId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'ADMIN');
+      allow write: if false;
+    }
+  }
+}

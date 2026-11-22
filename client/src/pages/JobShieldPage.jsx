@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth, db } from '../firebase/config';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { investigateRecruitment } from '../services/jobShieldService';
+import { investigateRecruitment, fetchJobShieldHistory } from '../services/jobShieldService';
 import JobShieldIntake from '../components/jobshield/JobShieldIntake';
 import JobShieldReport from '../components/jobshield/JobShieldReport';
 import JobShieldHistory from '../components/jobshield/JobShieldHistory';
@@ -37,31 +37,64 @@ const JobShieldPage = () => {
   const [submissionError, setSubmissionError] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Subscribe to user's JobShield investigations
-  useEffect(() => {
-    if (!user) return;
-
+  // Refresh history via authoritative backend API
+  const refreshHistory = async () => {
+    if (!user) {
+      setLoadingHistory(false);
+      return;
+    }
     setLoadingHistory(true);
-    const q = query(
-      collection(db, 'users', user.uid, 'jobshield_investigations'),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const results = [];
-        snapshot.forEach((doc) => {
-          results.push({ id: doc.id, ...doc.data() });
-        });
-        setHistory(results);
-        setLoadingHistory(false);
-      },
-      (err) => {
-        console.warn('[JobShield] History subscription notice:', err.message);
-        setLoadingHistory(false);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (token) {
+        const items = await fetchJobShieldHistory(token);
+        if (Array.isArray(items) && items.length > 0) {
+          setHistory(items);
+        }
       }
-    );
+    } catch (err) {
+      console.warn('[JobShield] History fetch notice:', err.message);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // Subscribe to user's JobShield investigations with backend API fallback
+  useEffect(() => {
+    if (!user) {
+      setLoadingHistory(false);
+      return;
+    }
+
+    refreshHistory();
+
+    // Also attempt real-time Firestore onSnapshot listener if client permissions permit
+    let unsubscribe = () => {};
+    try {
+      const q = query(
+        collection(db, 'users', user.uid, 'jobshield_investigations'),
+        orderBy('createdAt', 'desc')
+      );
+
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const results = [];
+          snapshot.forEach((doc) => {
+            results.push({ id: doc.id, ...doc.data() });
+          });
+          setHistory(results);
+          setLoadingHistory(false);
+        },
+        (err) => {
+          // If Firestore client listener is blocked by rules or unindexed, rely on backend API
+          console.info('[JobShield] Live snapshot notice (' + (err.code || err.message) + '), using authoritative API endpoint.');
+          refreshHistory();
+        }
+      );
+    } catch {
+      refreshHistory();
+    }
 
     return () => unsubscribe();
   }, [user]);
@@ -100,7 +133,11 @@ const JobShieldPage = () => {
       });
 
       setActiveInvestigation(result);
+      if (result) {
+        setHistory((prev) => [result, ...prev.filter((item) => item.id !== result.id)]);
+      }
       setCurrentView('report');
+      refreshHistory();
     } catch (err) {
       setSubmissionError(err.message || 'Investigation pipeline encountered an unexpected disruption.');
     } finally {

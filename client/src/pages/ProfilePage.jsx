@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DashboardNav from '../components/dashboard/DashboardNav';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/config';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { User, Mail, Lock, Shield } from 'lucide-react';
@@ -33,7 +33,22 @@ const ProfilePage = () => {
       
       // Update Firestore user document
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, { name: name });
+      try {
+        await updateDoc(userRef, { 
+          name: name,
+          updatedAt: serverTimestamp()
+        });
+      } catch (docErr) {
+        // If document doesn't exist yet, lazily create it
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: name,
+          email: user.email,
+          role: 'USER',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
 
       setMessage('Profile updated successfully.');
     } catch (err) {

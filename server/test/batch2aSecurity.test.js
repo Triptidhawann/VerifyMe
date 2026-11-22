@@ -334,7 +334,7 @@ describe('Batch 2A: Security Architecture, Authoritative Persistence & RBAC', ()
       headers: { 'Origin': 'https://malicious-attacker.netlify.app' }
     });
 
-    assert.strictEqual(res.status, 500); // Express CORS middleware throws error on unauthorized origin
+    assert.strictEqual(res.status, 403); // Express CORS middleware rejects unauthorized origin with HTTP 403 Forbidden
   });
 
   // --------------------------------------------------------------------------

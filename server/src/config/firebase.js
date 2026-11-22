@@ -6,6 +6,11 @@ const { getAuth } = require('firebase-admin/auth');
 admin.firestore = getFirestore;
 admin.firestore.FieldValue = FieldValue;
 admin.auth = getAuth;
+admin.credential = {
+  cert: admin.cert,
+  applicationDefault: admin.applicationDefault,
+  refreshToken: admin.refreshToken
+};
 
 /**
  * Robust Firebase Admin SDK Initialization
@@ -71,12 +76,12 @@ const initFirebaseAdmin = () => {
     }
   }
 
-  // 4. Strict check in production: fail clearly if credentials missing
+  // 4. In production without credentials, warn instead of throwing fatal process crash
   if (isProduction && !credential && !process.env.FIRESTORE_EMULATOR_HOST && !process.env.FIREBASE_AUTH_EMULATOR_HOST) {
-    throw new Error(
-      '[Firebase Admin] Missing required credentials in production. Configure FIREBASE_SERVICE_ACCOUNT, ' +
-      'GOOGLE_APPLICATION_CREDENTIALS, or (FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY). ' +
-      'Ambient GCP credentials are not assumed on Netlify/serverless.'
+    console.warn(
+      '[Firebase Admin Warning] Service account credentials not found in production environment. ' +
+      'Token verification will operate using public Google certs, but authoritative Firestore persistence ' +
+      'will require FIREBASE_SERVICE_ACCOUNT configured in Netlify environment variables.'
     );
   }
 
@@ -96,9 +101,6 @@ try {
 } catch (error) {
   if (!/already exists/.test(error.message)) {
     console.error('[Firebase Admin Initialization Error]:', error.message);
-    if (process.env.NODE_ENV === 'production') {
-      throw error;
-    }
   }
 }
 
