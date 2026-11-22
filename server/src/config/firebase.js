@@ -22,7 +22,8 @@ const initFirebaseAdmin = () => {
 
   const isProduction = process.env.NODE_ENV === 'production';
   let credential = null;
-  // Fall back to VITE_FIREBASE_PROJECT_ID or known project ID if FIREBASE_PROJECT_ID is omitted
+  // Firebase Project ID is a public project identifier (matching client config & hosting domain).
+  // Priority: FIREBASE_PROJECT_ID -> VITE_FIREBASE_PROJECT_ID -> default project ID.
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || 'verifyme-96690';
 
   // 1. Full service account JSON or Base64 in environment variable
