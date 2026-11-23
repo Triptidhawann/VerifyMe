@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { auth, db } from '../firebase/config';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -17,7 +17,7 @@ import {
 } from '../services/credentialCheckService';
 
 const CredentialCheckPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState('investigate'); // 'investigate' | 'history' | 'supported' | 'sources' | 'report'
   const [activeInvestigation, setActiveInvestigation] = useState(null);
   const [history, setHistory] = useState([]);
@@ -26,7 +26,7 @@ const CredentialCheckPage = () => {
   const [submissionError, setSubmissionError] = useState('');
 
   // Function to load authoritative investigation history via authenticated API
-  const refreshHistory = async () => {
+  const refreshHistory = useCallback(async () => {
     if (!user) {
       setLoadingHistory(false);
       return;
@@ -43,7 +43,7 @@ const CredentialCheckPage = () => {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [user]);
 
   // Restore active investigation on page refresh / load
   useEffect(() => {
@@ -93,7 +93,7 @@ const CredentialCheckPage = () => {
           setHistory(results);
           setLoadingHistory(false);
         },
-        (err) => {
+        () => {
           // If Firestore client listener is blocked by cloud rules, rely authoritatively on backend API
           console.info('[CredentialCheck] Live snapshot unavailable, using authoritative API endpoint.');
           refreshHistory();
@@ -104,7 +104,7 @@ const CredentialCheckPage = () => {
     }
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, refreshHistory]);
 
   const handleRunInvestigation = async (payload) => {
     setIsSubmitting(true);
@@ -174,9 +174,15 @@ const CredentialCheckPage = () => {
       currentTab={currentTab}
       onSelectTab={(tab) => {
         if (tab === 'investigate') handleNewInvestigation();
-        else setCurrentTab(tab);
+        else {
+          setCurrentTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }}
       historyCount={history.length}
+      user={user}
+      logout={logout}
+      isSubmitting={isSubmitting}
     >
       {currentTab === 'investigate' && (
         <CredentialCheckSubmit 

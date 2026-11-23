@@ -7,43 +7,44 @@ import {
   Upload, 
   X, 
   AlertCircle, 
-  Search, 
   ChevronDown, 
-  ChevronUp, 
   Building, 
   Globe, 
-  Shield, 
-  CheckCircle2, 
-  Info,
-  Layers,
-  Lock,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  HelpCircle,
+  FileCheck2
 } from 'lucide-react';
+import VerifyMeLoader from '../auth/VerifyMeLoader';
 import './JobShield.css';
 
 const INPUT_METHODS = [
   {
     id: 'text',
-    name: 'Paste Email / Message',
-    desc: 'Plaintext, RFC headers, or recruiter chat transcript',
+    name: 'Email / Message',
+    badge: 'Text',
+    desc: 'Paste email, offer text or recruiter message',
     icon: FileText
   },
   {
     id: 'pdf',
-    name: 'Upload PDF Offer Letter',
-    desc: 'Formal PDF employment contract or letter (max 5MB)',
+    name: 'PDF Offer Letter',
+    badge: 'PDF',
+    desc: 'Upload formal offer letter or contract',
     icon: Briefcase
   },
   {
     id: 'image',
-    name: 'Upload Screenshot',
-    desc: 'Screenshot of email, chat, or job board (PNG, JPEG)',
+    name: 'Screenshot',
+    badge: 'Image',
+    desc: 'Upload screenshot of email or message',
     icon: ImageIcon
   },
   {
     id: 'url',
     name: 'Job Posting URL',
-    desc: 'Direct career link or public job board posting',
+    badge: 'Web',
+    desc: 'Link to public career listing',
     icon: LinkIcon
   }
 ];
@@ -70,7 +71,7 @@ Compensation: $210,000 per year base salary
 Please review the complete requisition details on our career portal and submit your acceptance through the official onboarding dashboard.`
 };
 
-const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
+export const JobShieldIntake = ({ onSubmit, isSubmitting, error, onOpenMethodology }) => {
   const [activeMethod, setActiveMethod] = useState('text');
   const [rawText, setRawText] = useState('');
   const [urlInput, setUrlInput] = useState('');
@@ -81,6 +82,7 @@ const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
   const [claimedWebsite, setClaimedWebsite] = useState('');
   const [showOptionalContext, setShowOptionalContext] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -89,8 +91,7 @@ const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
     setLocalError('');
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
+  const processFile = (file) => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -104,7 +105,7 @@ const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
     }
 
     if (activeMethod === 'image' && !file.type.startsWith('image/')) {
-      setLocalError('Please select an image file (PNG, JPEG, WebP).');
+      setLocalError('Please select a valid image file (PNG, JPEG, WebP).');
       return;
     }
 
@@ -119,6 +120,27 @@ const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
   };
 
   const handleRemoveFile = () => {
@@ -187,368 +209,341 @@ const JobShieldIntake = ({ onSubmit, isSubmitting, error }) => {
   const displayError = localError || error;
 
   return (
-    <div className="js-split-grid">
-      {/* LEFT COLUMN: Case Submission */}
-      <div className="js-panel">
-        <div className="js-panel-header">
-          <div className="js-panel-title-group">
-            <h2 className="js-panel-title">Case Submission</h2>
-          </div>
-          <span className="js-panel-subtitle">Stage materials for investigation</span>
+    <div className="js-intake-root fadeIn">
+      {/* Page Introduction */}
+      <div className="js-intake-header">
+        <h2 className="js-intake-title">Check a job opportunity.</h2>
+        <p className="js-intake-subtitle">
+          Share the offer, recruiter message or job listing. We'll examine the available evidence and help you understand the risks.
+        </p>
+      </div>
+
+      {/* Main Submission Workspace Card */}
+      <div className="js-workspace-card">
+        {/* Input Method Selector */}
+        <div className="js-method-selector" role="tablist" aria-label="Submission method selector">
+          {INPUT_METHODS.map((method) => {
+            const Icon = method.icon;
+            const isActive = activeMethod === method.id;
+            return (
+              <button
+                key={method.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                className={`js-method-tab ${isActive ? 'active' : ''}`}
+                onClick={() => handleMethodSelect(method.id)}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="js-method-name">{method.name}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="js-panel-body">
-          <form onSubmit={handleSubmit}>
-            {/* Input Method Selector (Vertical / 2x2 Grid) */}
-            <div className="js-method-selector">
-              {INPUT_METHODS.map((method) => {
-                const Icon = method.icon;
-                const isSelected = activeMethod === method.id;
-                return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    className={`js-method-option ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleMethodSelect(method.id)}
-                  >
-                    <div className="js-method-icon-wrap">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="js-method-text">
-                      <span className="js-method-name">{method.name}</span>
-                      <span className="js-method-desc">{method.desc}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+        <form onSubmit={handleSubmit} noValidate className="js-intake-form">
+          {/* METHOD 1: TEXT / EMAIL / MESSAGE */}
+          {activeMethod === 'text' && (
+            <div className="js-input-pane fadeIn">
+              <div className="js-field-header">
+                <label htmlFor="js-text-content" className="js-field-label">
+                  Recruitment Communication or Offer Text
+                </label>
+                <span className="js-char-counter font-mono">
+                  {rawText.length} characters
+                </span>
+              </div>
 
-            {/* Input Mode 1: Text Editor */}
-            {activeMethod === 'text' && (
-              <div className="js-editor-container">
-                <textarea
-                  className="js-editor-textarea"
-                  placeholder="Paste the full recruitment email, headers, job offer text, or recruiter chat message here..."
-                  value={rawText}
-                  onChange={(e) => setRawText(e.target.value)}
+              <textarea
+                id="js-text-content"
+                className="js-textarea"
+                rows={9}
+                placeholder="Paste the recruiter's email, message, offer letter text, or interview invitation here..."
+                value={rawText}
+                onChange={(e) => setRawText(e.target.value)}
+                disabled={isSubmitting}
+              />
+
+              {/* Quick Sample Presets */}
+              <div className="js-presets-row">
+                <span className="js-presets-label font-mono">TEST SAMPLES:</span>
+                <button
+                  type="button"
+                  className="js-preset-chip"
+                  onClick={() => loadPreset('fraud')}
                   disabled={isSubmitting}
-                />
-                <div className="js-editor-footer">
-                  <span>{rawText.length} characters</span>
-                  <div className="js-preset-links">
-                    <span>Quick presets:</span>
-                    <button type="button" className="js-preset-btn" onClick={() => loadPreset('fraud')}>
-                      Sample Fraud Offer
-                    </button>
-                    <span>•</span>
-                    <button type="button" className="js-preset-btn" onClick={() => loadPreset('legit')}>
-                      Sample Legitimate Offer
-                    </button>
+                >
+                  <Sparkles className="w-3 h-3 text-[#D94E4E]" />
+                  <span>Suspicious Offer Sample</span>
+                </button>
+                <button
+                  type="button"
+                  className="js-preset-chip"
+                  onClick={() => loadPreset('legit')}
+                  disabled={isSubmitting}
+                >
+                  <Sparkles className="w-3 h-3 text-[#2E7D5B]" />
+                  <span>Legitimate Corporate Offer</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* METHOD 2: PDF UPLOAD */}
+          {activeMethod === 'pdf' && (
+            <div className="js-input-pane fadeIn">
+              <label className="js-field-label">
+                Upload PDF Employment Contract or Offer Letter
+              </label>
+
+              {!selectedFile ? (
+                <div 
+                  className={`js-dropzone ${isDragOver ? 'drag-over' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <div className="js-dropzone-icon-box">
+                    <Upload className="w-6 h-6 text-[#49B99A]" />
+                  </div>
+                  <div className="js-dropzone-content">
+                    <p className="js-dropzone-primary-text">
+                      <span className="text-[#49B99A] font-semibold underline">Click to upload</span> or drag and drop PDF file
+                    </p>
+                    <p className="js-dropzone-sub-text">
+                      Formal PDF offer letters, agreements, or contracts (up to 5 MB)
+                    </p>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Input Mode 2: PDF Dropzone */}
-            {activeMethod === 'pdf' && (
-              <div>
-                {!selectedFile ? (
-                  <div
-                    className="js-dropzone-box"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="js-dropzone-icon">
-                      <Upload className="w-5 h-5" />
+              ) : (
+                <div className="js-file-selected-card">
+                  <div className="js-file-info">
+                    <div className="js-file-icon-box">
+                      <FileCheck2 className="w-5 h-5 text-[#2E7D5B]" />
                     </div>
-                    <div className="js-dropzone-primary-text">Click or drag & drop PDF offer letter</div>
-                    <div className="js-dropzone-sub-text">PDF format, up to 5 MB. In-memory text extraction.</div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="application/pdf"
-                      style={{ display: 'none' }}
-                      onChange={handleFileSelect}
-                    />
-                  </div>
-                ) : (
-                  <div className="js-file-staged-card">
-                    <div className="js-file-staged-left">
-                      <Briefcase className="w-5 h-5 text-[#174C3C]" />
-                      <div>
-                        <div className="js-file-staged-name">{selectedFile.name}</div>
-                        <div className="js-file-staged-size">{(selectedFile.size / 1024).toFixed(1)} KB</div>
+                    <div>
+                      <div className="js-file-name font-mono">{selectedFile.name}</div>
+                      <div className="js-file-meta">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for analysis
                       </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="js-file-remove-btn"
+                    onClick={handleRemoveFile}
+                    title="Remove file"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* METHOD 3: SCREENSHOT UPLOAD */}
+          {activeMethod === 'image' && (
+            <div className="js-input-pane fadeIn">
+              <label className="js-field-label">
+                Upload Screenshot (Email, Chat, or Job Portal)
+              </label>
+
+              {!selectedFile ? (
+                <div 
+                  className={`js-dropzone ${isDragOver ? 'drag-over' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <div className="js-dropzone-icon-box">
+                    <ImageIcon className="w-6 h-6 text-[#49B99A]" />
+                  </div>
+                  <div className="js-dropzone-content">
+                    <p className="js-dropzone-primary-text">
+                      <span className="text-[#49B99A] font-semibold underline">Click to upload</span> or drag and drop image
+                    </p>
+                    <p className="js-dropzone-sub-text">
+                      PNG, JPEG, WebP screenshots of emails, LinkedIn chats or job posts (up to 5 MB)
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="js-image-preview-card">
+                  {imagePreview && (
+                    <img 
+                      src={imagePreview} 
+                      alt="Selected Screenshot" 
+                      className="js-image-preview-thumb" 
+                    />
+                  )}
+                  <div className="js-image-meta-wrap">
+                    <div className="js-file-name font-mono">{selectedFile.name}</div>
+                    <div className="js-file-meta">
+                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Screenshot staged
                     </div>
                     <button
                       type="button"
-                      className="js-file-remove-btn"
+                      className="js-file-remove-btn mt-2"
                       onClick={handleRemoveFile}
-                      title="Remove file"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
+                      <span>Remove screenshot</span>
                     </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Input Mode 3: Screenshot Dropzone */}
-            {activeMethod === 'image' && (
-              <div>
-                {!selectedFile ? (
-                  <div
-                    className="js-dropzone-box"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="js-dropzone-icon">
-                      <Upload className="w-5 h-5" />
-                    </div>
-                    <div className="js-dropzone-primary-text">Click or drag & drop screenshot</div>
-                    <div className="js-dropzone-sub-text">PNG, JPEG, WebP (up to 5 MB). Optical Character Recognition (OCR).</div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      style={{ display: 'none' }}
-                      onChange={handleFileSelect}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {imagePreview && (
-                      <div className="js-image-preview-wrap">
-                        <img src={imagePreview} alt="Screenshot preview" className="js-image-preview-img" />
-                      </div>
-                    )}
-                    <div className="js-file-staged-card">
-                      <div className="js-file-staged-left">
-                        <ImageIcon className="w-5 h-5 text-[#174C3C]" />
-                        <div>
-                          <div className="js-file-staged-name">{selectedFile.name}</div>
-                          <div className="js-file-staged-size">{(selectedFile.size / 1024).toFixed(1)} KB</div>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="js-file-remove-btn"
-                        onClick={handleRemoveFile}
-                        title="Remove image"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Input Mode 4: Job Posting URL */}
-            {activeMethod === 'url' && (
-              <div>
-                <input
-                  type="url"
-                  className="js-text-field"
-                  placeholder="https://company.com/careers/job-requisition-id"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  disabled={isSubmitting}
-                />
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  VerifyMe will fetch the target page using SSRF-hardened network connectors and extract the vacancy details.
-                </span>
-              </div>
-            )}
-
-            {/* Optional Context Accordion */}
-            <div className="mt-3">
-              <button
-                type="button"
-                className="js-context-toggle"
-                onClick={() => setShowOptionalContext(!showOptionalContext)}
-              >
-                {showOptionalContext ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                <span>Optional Context: Specify Claimed Company Name or Official Domain</span>
-              </button>
-
-              {showOptionalContext && (
-                <div className="js-context-fields-grid">
-                  <div className="js-field-group">
-                    <label className="js-field-label">Claimed Company Name</label>
-                    <input
-                      type="text"
-                      className="js-text-field"
-                      placeholder="e.g. Stripe, Acme Corp, Airbnb"
-                      value={claimedCompany}
-                      onChange={(e) => setClaimedCompany(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="js-field-group">
-                    <label className="js-field-label">Official Company Website</label>
-                    <input
-                      type="text"
-                      className="js-text-field"
-                      placeholder="e.g. stripe.com"
-                      value={claimedWebsite}
-                      onChange={(e) => setClaimedWebsite(e.target.value)}
-                      disabled={isSubmitting}
-                    />
                   </div>
                 </div>
               )}
             </div>
+          )}
 
-            {/* Error Banner */}
-            {displayError && (
-              <div className="js-alert-error">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                <span>{displayError}</span>
+          {/* METHOD 4: JOB POSTING URL */}
+          {activeMethod === 'url' && (
+            <div className="js-input-pane fadeIn">
+              <label htmlFor="js-url-field" className="js-field-label">
+                Job Posting URL or Career Link
+              </label>
+
+              <div className="js-url-input-wrap">
+                <LinkIcon className="js-url-icon w-4 h-4 text-[#94A098]" />
+                <input
+                  id="js-url-field"
+                  type="url"
+                  className="js-url-input"
+                  placeholder="https://company.greenhouse.io/jobs/12345 or https://stripe.com/jobs"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  disabled={isSubmitting}
+                />
+                {urlInput && (
+                  <button
+                    type="button"
+                    className="js-clear-icon-btn"
+                    onClick={() => setUrlInput('')}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <span className="js-field-hint">
+                Supports Greenhouse, Lever, Workable, Ashby, and company career domains.
+              </span>
+            </div>
+          )}
+
+          {/* OPTIONAL CONTEXT (EXPANDABLE) */}
+          <div className="js-optional-context-box">
+            <button
+              type="button"
+              className="js-optional-toggle"
+              onClick={() => setShowOptionalContext(!showOptionalContext)}
+              aria-expanded={showOptionalContext}
+            >
+              <span className="font-semibold text-sm">Add more details (optional)</span>
+              <ChevronDown className={`w-4 h-4 text-[#737D76] transition-transform ${showOptionalContext ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showOptionalContext && (
+              <div className="js-optional-fields-grid fadeIn">
+                <div className="js-optional-field">
+                  <label htmlFor="claimed-company" className="js-sub-label">
+                    Claimed Employer / Company Name
+                  </label>
+                  <div className="js-field-inner">
+                    <Building className="w-4 h-4 text-[#94A098] shrink-0" />
+                    <input
+                      id="claimed-company"
+                      type="text"
+                      placeholder="e.g. Stripe, Apple, Acme Global"
+                      value={claimedCompany}
+                      onChange={(e) => setClaimedCompany(e.target.value)}
+                      disabled={isSubmitting}
+                      className="js-sub-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="js-optional-field">
+                  <label htmlFor="claimed-website" className="js-sub-label">
+                    Official Corporate Website
+                  </label>
+                  <div className="js-field-inner">
+                    <Globe className="w-4 h-4 text-[#94A098] shrink-0" />
+                    <input
+                      id="claimed-website"
+                      type="text"
+                      placeholder="e.g. stripe.com or apple.com"
+                      value={claimedWebsite}
+                      onChange={(e) => setClaimedWebsite(e.target.value)}
+                      disabled={isSubmitting}
+                      className="js-sub-input"
+                    />
+                  </div>
+                </div>
               </div>
             )}
+          </div>
 
-            {/* Primary Submit Button */}
+          {/* Error Banner */}
+          {displayError && (
+            <div className="js-error-banner" role="alert">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{displayError}</span>
+            </div>
+          )}
+
+          {/* Submit Action Button */}
+          <div className="js-submit-action-wrap">
             <button
               type="submit"
-              className="js-submit-btn"
               disabled={isSubmitting}
+              className="js-primary-submit-btn"
             >
-              <Search className="w-4 h-4" />
-              <span>{isSubmitting ? 'Investigating Case File...' : 'Investigate Recruitment'}</span>
+              {isSubmitting ? (
+                <>
+                  <VerifyMeLoader size="sm" variant="white" label="Analyzing opportunity..." />
+                  <span>Investigating Opportunity...</span>
+                </>
+              ) : (
+                <>
+                  <span>Investigate Opportunity</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
 
-      {/* RIGHT COLUMN: Investigation Scope */}
-      <div className="js-panel">
-        <div className="js-panel-header">
-          <div className="js-panel-title-group">
-            <Shield className="w-4 h-4 text-slate-700" />
-            <h2 className="js-panel-title">Investigation Scope & Grounding</h2>
-          </div>
-          <span className="js-panel-subtitle">Available checks</span>
+      {/* Subtle Bottom Methodology Link */}
+      {onOpenMethodology && (
+        <div className="js-intake-footer-note">
+          <HelpCircle className="w-4 h-4 text-[#737D76]" />
+          <span>Learn how JobShield audits domain alignment, fraud heuristics & ATS listings.</span>
+          <button
+            type="button"
+            className="js-methodology-link"
+            onClick={onOpenMethodology}
+          >
+            How it works →
+          </button>
         </div>
-
-        <div className="js-panel-body">
-          {/* Explanatory callout */}
-          <div className="js-scope-explainer">
-            <Info className="w-4 h-4 text-[#174C3C] shrink-0 mt-0.5" />
-            <span>
-              Verification depends on available independent evidence. A missing public listing does not automatically mean an opportunity is fraudulent.
-            </span>
-          </div>
-
-          <div className="js-scope-groups">
-            {/* Group 1: Corporate Identity */}
-            <div className="js-scope-group-card">
-              <div className="js-scope-group-header">
-                <span className="js-scope-group-title">
-                  <span className="js-scope-group-number">1</span>
-                  Corporate Identity Verification
-                </span>
-                <Building className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="js-scope-check-list">
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Authoritative company root domain resolution</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Official company website reachability & HTTPS</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Domain similarity & typo-squatting detection (e.g. <code>stripe-careers.com</code>)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Group 2: Job Listing Verification */}
-            <div className="js-scope-group-card">
-              <div className="js-scope-group-header">
-                <span className="js-scope-group-title">
-                  <span className="js-scope-group-number">2</span>
-                  Job Listing Verification
-                </span>
-                <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="js-scope-check-list">
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Public ATS job board query (Greenhouse, Lever, Ashby)</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Job title, location, and requisition ID cross-matching</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Application destination classification (official ATS vs third-party form)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Group 3: Recruiter Communication */}
-            <div className="js-scope-group-card">
-              <div className="js-scope-group-header">
-                <span className="js-scope-group-title">
-                  <span className="js-scope-group-number">3</span>
-                  Recruiter Communication Integrity
-                </span>
-                <Globe className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="js-scope-check-list">
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Sender email domain alignment with claimed corporate entity</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Free public webmail detection (<code>@gmail.com</code>, <code>@yahoo.com</code>)</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Reply-To address mismatch and response redirection</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Authoritative DNS Mail Exchange (MX) routing validation</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Group 4: Fraud Indicators */}
-            <div className="js-scope-group-card">
-              <div className="js-scope-group-header">
-                <span className="js-scope-group-title">
-                  <span className="js-scope-group-number">4</span>
-                  Fraud & Exploitation Indicators
-                </span>
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-              <div className="js-scope-check-list">
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Advance fees (registration, interview, training, or deposit)</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Equipment purchase or fake check / wire reimbursement schemes</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Premature credential requests (online banking passwords, OTPs, SSN)</span>
-                </div>
-                <div className="js-scope-check-item">
-                  <span className="js-scope-check-bullet" />
-                  <span>Guaranteed offers without interview & artificial urgency tactics</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

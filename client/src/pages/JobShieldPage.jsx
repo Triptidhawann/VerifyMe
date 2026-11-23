@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth, db } from '../firebase/config';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -9,7 +9,6 @@ import JobShieldReport from '../components/jobshield/JobShieldReport';
 import JobShieldHistory from '../components/jobshield/JobShieldHistory';
 import JobShieldMethodology from '../components/jobshield/JobShieldMethodology';
 import { 
-  Shield, 
   ShieldCheck, 
   PlusCircle, 
   FolderOpen, 
@@ -17,16 +16,13 @@ import {
   ArrowLeft, 
   Menu, 
   X, 
-  ExternalLink,
-  Activity,
-  User,
-  LogOut
+  LogOut,
+  Briefcase
 } from 'lucide-react';
 import '../components/jobshield/JobShield.css';
 
-const JobShieldPage = () => {
+export const JobShieldPage = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   // Navigation views: 'intake' | 'report' | 'history' | 'methodology'
   const [currentView, setCurrentView] = useState('intake');
@@ -35,10 +31,10 @@ const JobShieldPage = () => {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState('');
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Refresh history via authoritative backend API
-  const refreshHistory = async () => {
+  // Refresh history via backend API
+  const refreshHistory = useCallback(async () => {
     if (!user) {
       setLoadingHistory(false);
       return;
@@ -57,7 +53,7 @@ const JobShieldPage = () => {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, [user]);
 
   // Subscribe to user's JobShield investigations with backend API fallback
   useEffect(() => {
@@ -68,7 +64,6 @@ const JobShieldPage = () => {
 
     refreshHistory();
 
-    // Also attempt real-time Firestore onSnapshot listener if client permissions permit
     let unsubscribe = () => {};
     try {
       const q = query(
@@ -87,8 +82,7 @@ const JobShieldPage = () => {
           setLoadingHistory(false);
         },
         (err) => {
-          // If Firestore client listener is blocked by rules or unindexed, rely on backend API
-          console.info('[JobShield] Live snapshot notice (' + (err.code || err.message) + '), using authoritative API endpoint.');
+          console.info('[JobShield] Live snapshot notice (' + (err.code || err.message) + '), using backend API.');
           refreshHistory();
         }
       );
@@ -97,24 +91,27 @@ const JobShieldPage = () => {
     }
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, refreshHistory]);
 
   const handleStartNew = () => {
     setActiveInvestigation(null);
     setSubmissionError('');
     setCurrentView('intake');
-    setMobileSidebarOpen(false);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSelectCase = (caseItem) => {
     setActiveInvestigation(caseItem);
     setCurrentView('report');
-    setMobileSidebarOpen(false);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleViewChange = (view) => {
     setCurrentView(view);
-    setMobileSidebarOpen(false);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleRunInvestigation = async (submissionPayload) => {
@@ -138,184 +135,203 @@ const JobShieldPage = () => {
       }
       setCurrentView('report');
       refreshHistory();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      setSubmissionError(err.message || 'Investigation pipeline encountered an unexpected disruption.');
+      setSubmissionError(err.message || 'Investigation pipeline encountered an unexpected disruption. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const userInitial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : (user?.email?.charAt(0).toUpperCase() || 'U');
-  const userFirst = user?.displayName ? user.displayName.split(' ')[0] : (user?.email?.split('@')[0] || 'Analyst');
+  const userInitial = user?.displayName 
+    ? user.displayName.charAt(0).toUpperCase() 
+    : (user?.email?.charAt(0).toUpperCase() || 'U');
+  const userFirst = user?.displayName 
+    ? user.displayName.split(' ')[0] 
+    : (user?.email?.split('@')[0] || 'User');
 
   return (
     <div className="js-app-shell">
-      {/* LEFT SIDEBAR (Dedicated Enterprise Shell) */}
-      <aside className={`js-sidebar ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
-        {/* Brand Lockup */}
-        <div className="js-sidebar-brand">
-          <Link to="/jobshield" className="js-brand-lockup" onClick={handleStartNew}>
-            <div className="js-brand-icon-box">
-              <Shield className="w-4 h-4 text-blue-400" />
-            </div>
-            <div>
-              <div className="js-brand-title">
-                <span>JobShield</span>
-                <span className="js-brand-badge">Ops</span>
+      {/* Top Application Header */}
+      <header className="js-header-bar">
+        <div className="js-header-container">
+          {/* Brand & Module Lockup */}
+          <div className="js-brand-lockup">
+            <Link to="/dashboard" className="js-main-logo" title="Back to VerifyMe Dashboard">
+              <div className="js-logo-icon-box">
+                <ShieldCheck className="w-5 h-5 text-[#49B99A]" />
               </div>
-            </div>
-          </Link>
-          <button 
-            type="button" 
-            className="md:hidden text-slate-400 hover:text-white"
-            onClick={() => setMobileSidebarOpen(false)}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+              <span className="js-brand-text">Verify<span className="brand-accent">Me</span></span>
+            </Link>
 
-        {/* Sidebar Nav Items */}
-        <div className="js-sidebar-nav">
-          <span className="js-nav-section-label">Case Management</span>
+            <span className="js-brand-separator" aria-hidden="true">/</span>
 
-          <button
-            type="button"
-            className={`js-nav-item ${currentView === 'intake' && !activeInvestigation ? 'active' : ''}`}
-            onClick={handleStartNew}
-          >
-            <div className="js-nav-item-left">
-              <PlusCircle className="w-4 h-4 text-emerald-400" />
-              <span>New Investigation</span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            className={`js-nav-item ${currentView === 'history' ? 'active' : ''}`}
-            onClick={() => handleViewChange('history')}
-          >
-            <div className="js-nav-item-left">
-              <FolderOpen className="w-4 h-4" />
-              <span>Case History</span>
-            </div>
-            {history.length > 0 && (
-              <span className="js-nav-counter">{history.length}</span>
-            )}
-          </button>
-
-          <div className="js-sidebar-divider" />
-
-          <span className="js-nav-section-label">Documentation</span>
-
-          <button
-            type="button"
-            className={`js-nav-item ${currentView === 'methodology' ? 'active' : ''}`}
-            onClick={() => handleViewChange('methodology')}
-          >
-            <div className="js-nav-item-left">
-              <HelpCircle className="w-4 h-4" />
-              <span>How Verification Works</span>
-            </div>
-          </button>
-
-          <div className="js-sidebar-divider" />
-
-          <span className="js-nav-section-label">Platform</span>
-
-          <Link
-            to="/dashboard"
-            className="js-nav-item"
-          >
-            <div className="js-nav-item-left">
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to VerifyMe</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Sidebar Footer User Info */}
-        <div className="js-sidebar-footer">
-          <div className="js-user-brief">
-            <div className="js-user-avatar">
-              {userInitial}
-            </div>
-            <div className="js-user-meta">
-              <span className="js-user-name">{userFirst}</span>
-              <span className="js-user-role">Fraud Analyst</span>
-            </div>
+            <button 
+              type="button" 
+              className="js-module-pill" 
+              onClick={handleStartNew}
+              title="JobShield Home"
+            >
+              <Briefcase className="w-3.5 h-3.5 text-[#2E7D5B]" />
+              <span>JobShield</span>
+              <span className="js-module-tag font-mono">INTELLIGENCE</span>
+            </button>
           </div>
-          <button 
-            type="button" 
-            onClick={logout}
-            className="text-slate-400 hover:text-red-400 transition-colors p-1"
-            title="Log out"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </aside>
 
-      {/* MAIN WORKSPACE VIEWPORT */}
-      <div className="js-main-content">
-        {/* Top Application Bar */}
-        <header className="js-top-bar">
-          <div className="flex items-center gap-3">
+          {/* Center Navigation Tabs (Desktop) */}
+          <nav className="js-center-nav" aria-label="JobShield Navigation">
             <button
               type="button"
-              className="js-mobile-nav-toggle md:hidden"
-              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              className={`js-nav-tab ${currentView === 'intake' && !activeInvestigation ? 'active' : ''}`}
+              onClick={handleStartNew}
             >
-              <Menu className="w-5 h-5" />
+              <PlusCircle className="w-4 h-4" />
+              <span>New Investigation</span>
             </button>
-            <div className="js-top-bar-left">
-              <h1 className="js-workspace-title">Recruitment Investigation</h1>
-              <p className="js-workspace-subtitle">
-                Analyze job offers, recruiter communications and employment opportunities using independently sourced evidence.
-              </p>
+
+            <button
+              type="button"
+              className={`js-nav-tab ${currentView === 'history' ? 'active' : ''}`}
+              onClick={() => handleViewChange('history')}
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span>Case History</span>
+              {history.length > 0 && (
+                <span className="js-counter-pill font-mono">{history.length}</span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`js-nav-tab ${currentView === 'methodology' ? 'active' : ''}`}
+              onClick={() => handleViewChange('methodology')}
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>How JobShield Works</span>
+            </button>
+          </nav>
+
+          {/* Right Status & Account Controls */}
+          <div className="js-right-controls">
+            <div className="js-engine-status" title="Investigation pipeline ready">
+              <span className={`js-status-dot ${isSubmitting ? 'is-pulsing' : ''}`} />
+              <span className="js-status-text font-mono">
+                {isSubmitting ? 'ANALYZING...' : 'ONLINE'}
+              </span>
+            </div>
+
+            <Link to="/dashboard" className="js-return-btn" title="Return to VerifyMe Workspace">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">VerifyMe</span>
+            </Link>
+
+            <div className="js-user-pill">
+              <div className="js-user-avatar">
+                {userInitial}
+              </div>
+              <span className="js-user-name hidden md:inline">{userFirst}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="js-logout-btn"
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+
+            {/* Mobile Menu Toggle Button */}
+            <button
+              type="button"
+              className="js-mobile-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="js-mobile-drawer fadeIn">
+            <div className="js-mobile-links">
+              <button
+                type="button"
+                className={`js-mobile-link ${currentView === 'intake' ? 'active' : ''}`}
+                onClick={handleStartNew}
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>New Investigation</span>
+              </button>
+
+              <button
+                type="button"
+                className={`js-mobile-link ${currentView === 'history' ? 'active' : ''}`}
+                onClick={() => handleViewChange('history')}
+              >
+                <FolderOpen className="w-4 h-4" />
+                <span>Case History ({history.length})</span>
+              </button>
+
+              <button
+                type="button"
+                className={`js-mobile-link ${currentView === 'methodology' ? 'active' : ''}`}
+                onClick={() => handleViewChange('methodology')}
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>How JobShield Works</span>
+              </button>
+
+              <Link
+                to="/dashboard"
+                className="js-mobile-link"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to VerifyMe Dashboard</span>
+              </Link>
             </div>
           </div>
+        )}
+      </header>
 
-          <div className="js-top-bar-right">
-            <div className="js-status-indicator">
-              <span className={`js-status-dot ${isSubmitting ? 'pulsing' : ''}`} />
-              <span>{isSubmitting ? 'Investigating case file...' : 'Ready for investigation'}</span>
-            </div>
-          </div>
-        </header>
+      {/* Main Investigation Workspace Viewport */}
+      <main className="js-main-viewport">
+        {currentView === 'intake' && (
+          <JobShieldIntake 
+            onSubmit={handleRunInvestigation}
+            isSubmitting={isSubmitting}
+            error={submissionError}
+            onOpenMethodology={() => handleViewChange('methodology')}
+          />
+        )}
 
-        {/* Workspace Canvas */}
-        <main className="js-workspace-canvas">
-          {currentView === 'intake' && (
-            <JobShieldIntake 
-              onSubmit={handleRunInvestigation}
-              isSubmitting={isSubmitting}
-              error={submissionError}
-            />
-          )}
+        {currentView === 'report' && activeInvestigation && (
+          <JobShieldReport 
+            investigation={activeInvestigation}
+            onNewInvestigation={handleStartNew}
+          />
+        )}
 
-          {currentView === 'report' && activeInvestigation && (
-            <JobShieldReport 
-              investigation={activeInvestigation}
-              onNewInvestigation={handleStartNew}
-            />
-          )}
+        {currentView === 'history' && (
+          <JobShieldHistory 
+            history={history}
+            loading={loadingHistory}
+            onSelectCase={handleSelectCase}
+            onStartNew={handleStartNew}
+          />
+        )}
 
-          {currentView === 'history' && (
-            <JobShieldHistory 
-              history={history}
-              loading={loadingHistory}
-              onSelectCase={handleSelectCase}
-              onStartNew={handleStartNew}
-            />
-          )}
-
-          {currentView === 'methodology' && (
-            <JobShieldMethodology 
-              onBackToIntake={handleStartNew}
-            />
-          )}
-        </main>
-      </div>
+        {currentView === 'methodology' && (
+          <JobShieldMethodology 
+            onBackToIntake={handleStartNew}
+          />
+        )}
+      </main>
     </div>
   );
 };

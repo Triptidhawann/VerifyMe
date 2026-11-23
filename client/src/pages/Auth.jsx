@@ -1,67 +1,53 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
-  ShieldCheck, 
-  Lock, 
   Mail, 
   User, 
   ArrowLeft, 
-  Eye, 
-  EyeOff, 
   AlertCircle, 
   CheckCircle2, 
-  Sparkles,
-  Zap
+  Check 
 } from 'lucide-react';
+
+import AuthLayout from '../components/auth/AuthLayout';
+import FormField from '../components/auth/FormField';
+import PasswordInput from '../components/auth/PasswordInput';
+import GoogleButton from '../components/auth/GoogleButton';
+import AuthButton from '../components/auth/AuthButton';
 import './Auth.css';
 
-const Auth = () => {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { login, signup, resetPassword, loginWithGoogle, user } = useAuth();
-  
-  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'signup' | 'forgot'
-  
-  // Login State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
-  // Signup State
+
+  // Active view: 'login' | 'signup' | 'forgot'
+  const [activeTab, setActiveTab] = useState('login');
+
+  // Sign In state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Sign Up state
   const [name, setName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // Forgot Password State
+  // Forgot password state
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
 
-  // Status & Visibility
-  const [error, setError] = useState('');
+  // Form submission & error states
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const cardRef = useRef(null);
-
-  // Dynamic Card Sheen on mouse move
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!cardRef.current) return;
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      cardRef.current.style.setProperty('--mouse-x', `${x}px`);
-      cardRef.current.style.setProperty('--mouse-y', `${y}px`);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  // Sync tab with URL
+  // Sync tab with URL on mount or location change
   useEffect(() => {
     if (location.pathname === '/signup') {
       setActiveTab('signup');
@@ -70,447 +56,532 @@ const Auth = () => {
     }
   }, [location.pathname]);
 
-  // If user is already logged in, redirect immediately
+  // Redirect if user is already authenticated
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
 
+  // Tab switching with URL synchronization
   const handleTabSwitch = (tab) => {
     setActiveTab(tab);
-    setError('');
+    setAuthError('');
+    setFieldErrors({});
     setResetSuccess('');
     if (tab === 'login' || tab === 'signup') {
       window.history.pushState(null, '', `/${tab}`);
     }
   };
 
+  // Clear errors when user edits inputs
+  const clearError = (fieldName) => {
+    if (authError) setAuthError('');
+    if (fieldErrors[fieldName]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldName];
+        return next;
+      });
+    }
+  };
+
+  // Sign In submission
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setAuthError('');
+    const errors = {};
 
-    if (!email.trim() || !password) {
-      setError('Please provide both your email and password.');
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail) {
+      errors.loginEmail = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      errors.loginEmail = 'Please enter a valid email address.';
+    }
+
+    if (!loginPassword) {
+      errors.loginPassword = 'Password is required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
+    setFieldErrors({});
     setIsSubmitting(true);
     try {
-      await login(email.trim(), password);
+      await login(trimmedEmail, loginPassword);
       navigate('/dashboard');
     } catch (err) {
-      setError(err || 'Failed to authenticate. Please check your credentials.');
+      setAuthError(typeof err === 'string' ? err : 'Unable to sign in. Please verify your credentials.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Sign Up submission
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setAuthError('');
+    const errors = {};
 
-    if (!name.trim() || !signupEmail.trim() || !signupPassword || !confirmPassword) {
-      setError('Please fill in all required fields.');
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      errors.name = 'Full name is required.';
+    }
+
+    const trimmedEmail = signupEmail.trim();
+    if (!trimmedEmail) {
+      errors.signupEmail = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      errors.signupEmail = 'Please enter a valid email address.';
+    }
+
+    if (!signupPassword) {
+      errors.signupPassword = 'Password is required.';
+    } else if (signupPassword.length < 6) {
+      errors.signupPassword = 'Password must be at least 6 characters.';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Confirmation password is required.';
+    } else if (signupPassword !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (!agreeTerms) {
+      errors.agreeTerms = 'Please acknowledge the terms to proceed.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
-    if (signupPassword !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
-    if (signupPassword.length < 6) {
-      setError('Password must contain at least 6 characters.');
-      return;
-    }
-
+    setFieldErrors({});
     setIsSubmitting(true);
     try {
-      await signup(name.trim(), signupEmail.trim(), signupPassword);
+      await signup(trimmedName, trimmedEmail, signupPassword);
       navigate('/dashboard');
     } catch (err) {
-      setError(err || 'Failed to initialize account.');
+      setAuthError(typeof err === 'string' ? err : 'Unable to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Google SSO
   const handleGoogleLogin = async () => {
+    setAuthError('');
+    setFieldErrors({});
     setIsSubmitting(true);
-    setError('');
     try {
       await loginWithGoogle();
       navigate('/dashboard');
     } catch (err) {
-      setError(err || 'Google sign-in was cancelled or failed.');
+      setAuthError(typeof err === 'string' ? err : 'Google sign-in was cancelled or failed.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Forgot password submission
   const handleForgotSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setAuthError('');
     setResetSuccess('');
+    const errors = {};
 
-    if (!resetEmail.trim()) {
-      setError('Please enter your registered email address.');
+    const trimmedEmail = resetEmail.trim();
+    if (!trimmedEmail) {
+      errors.resetEmail = 'Email address is required.';
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      errors.resetEmail = 'Please enter a valid email address.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
+    setFieldErrors({});
     setIsSubmitting(true);
     try {
-      await resetPassword(resetEmail.trim());
+      await resetPassword(trimmedEmail);
       setResetSuccess('Recovery instructions dispatched. Please check your inbox.');
     } catch (err) {
-      setError(err || 'Failed to transmit reset email. Verify your address.');
+      setAuthError(typeof err === 'string' ? err : 'Failed to send reset link. Verify your email.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Live validation helpers for signup
+  const isPasswordValidLength = signupPassword.length >= 6;
+  const doPasswordsMatch = Boolean(
+    signupPassword && confirmPassword && signupPassword === confirmPassword
+  );
+
   return (
-    <div className="auth-portal-root">
-      {/* Background Visual Elements */}
-      <div className="auth-mesh-grid" />
-      <div className="auth-ambient-glow" />
-
-      {/* Top Navigation */}
-      <header className="auth-nav-bar">
-        <Link to="/" className="auth-back-pill" title="Return to Home">
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home</span>
-        </Link>
-        <Link to="/" className="auth-brand-logo">
-          <ShieldCheck className="w-6 h-6 text-indigo-400" />
-          <span>Verify<span className="text-indigo-400">Me</span></span>
-        </Link>
-        <div className="auth-status-chip">
-          <span className="status-ping" />
-          <span>Threat Engine v2.4 Active</span>
+    <AuthLayout>
+      {/* Segmented Tab Switcher (Sign In vs Create Account) */}
+      {activeTab !== 'forgot' && (
+        <div className="auth-tab-nav" role="tablist" aria-label="Authentication modes">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'login'}
+            aria-controls="auth-login-panel"
+            className={`auth-tab-item ${activeTab === 'login' ? 'is-active' : ''}`}
+            onClick={() => handleTabSwitch('login')}
+          >
+            <span>Sign In</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'signup'}
+            aria-controls="auth-signup-panel"
+            className={`auth-tab-item ${activeTab === 'signup' ? 'is-active' : ''}`}
+            onClick={() => handleTabSwitch('signup')}
+          >
+            <span>Create Account</span>
+          </button>
         </div>
-      </header>
+      )}
 
-      {/* Main Interactive Auth Card */}
-      <main className="auth-main-wrapper">
-        <div ref={cardRef} className="auth-skeuo-card">
-          <div className="card-ambient-sheen" />
+      {/* General Alert Messages */}
+      {authError && (
+        <div className="auth-banner auth-banner--error" role="alert">
+          <AlertCircle size={18} className="auth-banner-icon" />
+          <span className="auth-banner-text">{authError}</span>
+        </div>
+      )}
 
-          {/* Segmented Tab Switcher */}
-          {activeTab !== 'forgot' && (
-            <div className="auth-segmented-tabs">
-              <button
-                type="button"
-                className={`tab-btn ${activeTab === 'login' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('login')}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                className={`tab-btn ${activeTab === 'signup' ? 'active' : ''}`}
-                onClick={() => handleTabSwitch('signup')}
-              >
-                Create Account
-              </button>
-            </div>
-          )}
+      {resetSuccess && (
+        <div className="auth-banner auth-banner--success" role="status">
+          <CheckCircle2 size={18} className="auth-banner-icon" />
+          <span className="auth-banner-text">{resetSuccess}</span>
+        </div>
+      )}
 
-          {/* Error & Success Feedback */}
-          {error && (
-            <div className="auth-alert error">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+      {/* =====================================================================
+          VIEW 1: SIGN IN
+          ===================================================================== */}
+      {activeTab === 'login' && (
+        <div id="auth-login-panel" role="tabpanel" className="auth-form-view">
+          <header className="auth-view-header">
+            <h2 className="auth-view-title">Welcome back</h2>
+            <p className="auth-view-subtitle">Enter your credentials to access your verification workspace.</p>
+          </header>
 
-          {resetSuccess && (
-            <div className="auth-alert success">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>{resetSuccess}</span>
-            </div>
-          )}
+          {/* Continue with Google */}
+          <GoogleButton
+            onClick={handleGoogleLogin}
+            disabled={isSubmitting}
+            loading={isSubmitting}
+            text="Continue with Google"
+          />
 
-          {/* TAB 1: SIGN IN */}
-          {activeTab === 'login' && (
-            <div className="auth-pane fadeIn">
-              <div className="auth-pane-header">
-                <h2>Welcome Back</h2>
-                <p>Sign in to your digital intelligence workspace.</p>
-              </div>
+          {/* Divider */}
+          <div className="auth-divider" role="separator">
+            <span className="auth-divider-label">or continue with email</span>
+          </div>
 
-              <form onSubmit={handleLoginSubmit} className="auth-fields-form">
-                <div className="auth-input-group">
-                  <label htmlFor="login-email">Email Address</label>
-                  <div className="input-box">
-                    <Mail className="input-icon" />
-                    <input
-                      id="login-email"
-                      type="email"
-                      placeholder="name@organization.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isSubmitting}
-                      autoComplete="email"
-                    />
-                  </div>
-                </div>
+          {/* Sign In Form */}
+          <form onSubmit={handleLoginSubmit} noValidate className="auth-form">
+            <FormField
+              id="login-email"
+              label="Email address"
+              type="email"
+              placeholder="name@organization.com"
+              icon={Mail}
+              value={loginEmail}
+              onChange={(e) => {
+                setLoginEmail(e.target.value);
+                clearError('loginEmail');
+              }}
+              required
+              autoComplete="email"
+              disabled={isSubmitting}
+              error={fieldErrors.loginEmail}
+            />
 
-                <div className="auth-input-group">
-                  <div className="label-with-action">
-                    <label htmlFor="login-password">Password</label>
-                    <button
-                      type="button"
-                      className="text-link"
-                      onClick={() => handleTabSwitch('forgot')}
-                    >
-                      Forgot?
-                    </button>
-                  </div>
-                  <div className="input-box">
-                    <Lock className="input-icon" />
-                    <input
-                      id="login-password"
-                      type={showLoginPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isSubmitting}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      className="eye-toggle"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      tabIndex={-1}
-                    >
-                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="auth-primary-btn"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="spinner-dot" /> Authenticating...
-                    </span>
-                  ) : (
-                    'Sign In to Workspace →'
-                  )}
-                </button>
-              </form>
-
-              <div className="auth-divider">
-                <span>OR CONTINUE WITH</span>
-              </div>
-
-              <button
-                type="button"
-                className="auth-google-btn"
-                onClick={handleGoogleLogin}
-                disabled={isSubmitting}
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                <span>Continue with Google</span>
-              </button>
-            </div>
-          )}
-
-          {/* TAB 2: SIGN UP */}
-          {activeTab === 'signup' && (
-            <div className="auth-pane fadeIn">
-              <div className="auth-pane-header">
-                <h2>Create Account</h2>
-                <p>Equip yourself with automated digital verification.</p>
-              </div>
-
-              <form onSubmit={handleSignupSubmit} className="auth-fields-form">
-                <div className="auth-input-group">
-                  <label htmlFor="signup-name">Full Name</label>
-                  <div className="input-box">
-                    <User className="input-icon" />
-                    <input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Jane Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      disabled={isSubmitting}
-                      autoComplete="name"
-                    />
-                  </div>
-                </div>
-
-                <div className="auth-input-group">
-                  <label htmlFor="signup-email">Work or Personal Email</label>
-                  <div className="input-box">
-                    <Mail className="input-icon" />
-                    <input
-                      id="signup-email"
-                      type="email"
-                      placeholder="jane@organization.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      disabled={isSubmitting}
-                      autoComplete="email"
-                    />
-                  </div>
-                </div>
-
-                <div className="auth-grid-row">
-                  <div className="auth-input-group">
-                    <label htmlFor="signup-password">Password</label>
-                    <div className="input-box">
-                      <Lock className="input-icon" />
-                      <input
-                        id="signup-password"
-                        type={showSignupPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        disabled={isSubmitting}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        className="eye-toggle"
-                        onClick={() => setShowSignupPassword(!showSignupPassword)}
-                        tabIndex={-1}
-                      >
-                        {showSignupPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="auth-input-group">
-                    <label htmlFor="confirm-password">Confirm</label>
-                    <div className="input-box">
-                      <Lock className="input-icon" />
-                      <input
-                        id="confirm-password"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={isSubmitting}
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        className="eye-toggle"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="auth-primary-btn"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="spinner-dot" /> Provisioning Workspace...
-                    </span>
-                  ) : (
-                    'Initialize Free Workspace →'
-                  )}
-                </button>
-              </form>
-
-              <div className="auth-divider">
-                <span>OR SIGN UP WITH</span>
-              </div>
-
-              <button
-                type="button"
-                className="auth-google-btn"
-                onClick={handleGoogleLogin}
-                disabled={isSubmitting}
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                <span>Continue with Google</span>
-              </button>
-            </div>
-          )}
-
-          {/* TAB 3: FORGOT PASSWORD */}
-          {activeTab === 'forgot' && (
-            <div className="auth-pane fadeIn">
-              <div className="auth-pane-header">
-                <h2>Reset Password</h2>
-                <p>Enter your account email to receive cryptographic password recovery instructions.</p>
-              </div>
-
-              <form onSubmit={handleForgotSubmit} className="auth-fields-form">
-                <div className="auth-input-group">
-                  <label htmlFor="reset-email">Registered Email Address</label>
-                  <div className="input-box">
-                    <Mail className="input-icon" />
-                    <input
-                      id="reset-email"
-                      type="email"
-                      placeholder="name@organization.com"
-                      value={resetEmail}
-                      onChange={(e) => setResetEmail(e.target.value)}
-                      disabled={isSubmitting}
-                      autoComplete="email"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="auth-primary-btn"
-                >
-                  {isSubmitting ? 'Transmitting Instructions...' : 'Send Recovery Link'}
-                </button>
-
+            <PasswordInput
+              id="login-password"
+              label="Password"
+              placeholder="••••••••"
+              value={loginPassword}
+              onChange={(e) => {
+                setLoginPassword(e.target.value);
+                clearError('loginPassword');
+              }}
+              required
+              autoComplete="current-password"
+              disabled={isSubmitting}
+              error={fieldErrors.loginPassword}
+              headerAction={
                 <button
                   type="button"
-                  className="auth-secondary-btn"
-                  onClick={() => handleTabSwitch('login')}
+                  className="auth-header-link"
+                  onClick={() => handleTabSwitch('forgot')}
+                  tabIndex={0}
                 >
-                  Return to Sign In
+                  Forgot password?
                 </button>
-              </form>
-            </div>
-          )}
+              }
+            />
 
-          {/* Physical Skeuomorphic Security Badge */}
-          <div className="auth-security-footer">
-            <div className="footer-badge">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>256-Bit Encrypted Session</span>
-            </div>
-            <div className="footer-badge">
-              <Zap className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Enterprise RBAC Guarded</span>
-            </div>
-          </div>
+            <AuthButton
+              type="submit"
+              variant="primary"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Sign In
+            </AuthButton>
+          </form>
+
+          {/* Footer switcher */}
+          <footer className="auth-view-footer">
+            <span className="auth-view-footer-text">Don't have an account?</span>
+            <button
+              type="button"
+              className="auth-link-action"
+              onClick={() => handleTabSwitch('signup')}
+            >
+              Create Account
+            </button>
+          </footer>
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* =====================================================================
+          VIEW 2: CREATE ACCOUNT (SIGN UP)
+          ===================================================================== */}
+      {activeTab === 'signup' && (
+        <div id="auth-signup-panel" role="tabpanel" className="auth-form-view">
+          <header className="auth-view-header">
+            <h2 className="auth-view-title">Create your account</h2>
+            <p className="auth-view-subtitle">Start verifying identities and making confident decisions.</p>
+          </header>
+
+          {/* Continue with Google */}
+          <GoogleButton
+            onClick={handleGoogleLogin}
+            disabled={isSubmitting}
+            loading={isSubmitting}
+            text="Continue with Google"
+          />
+
+          {/* Divider */}
+          <div className="auth-divider" role="separator">
+            <span className="auth-divider-label">or register with email</span>
+          </div>
+
+          {/* Sign Up Form */}
+          <form onSubmit={handleSignupSubmit} noValidate className="auth-form">
+            <FormField
+              id="signup-name"
+              label="Full name"
+              type="text"
+              placeholder="Alex Morgan"
+              icon={User}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                clearError('name');
+              }}
+              required
+              autoComplete="name"
+              disabled={isSubmitting}
+              error={fieldErrors.name}
+            />
+
+            <FormField
+              id="signup-email"
+              label="Email address"
+              type="email"
+              placeholder="name@organization.com"
+              icon={Mail}
+              value={signupEmail}
+              onChange={(e) => {
+                setSignupEmail(e.target.value);
+                clearError('signupEmail');
+              }}
+              required
+              autoComplete="email"
+              disabled={isSubmitting}
+              error={fieldErrors.signupEmail}
+            />
+
+            <PasswordInput
+              id="signup-password"
+              label="Password"
+              placeholder="••••••••"
+              value={signupPassword}
+              onChange={(e) => {
+                setSignupPassword(e.target.value);
+                clearError('signupPassword');
+              }}
+              required
+              autoComplete="new-password"
+              disabled={isSubmitting}
+              error={fieldErrors.signupPassword}
+              requirements={
+                signupPassword.length > 0 ? (
+                  <div className={`auth-requirement-pill ${isPasswordValidLength ? 'met' : ''}`}>
+                    <span className="auth-requirement-icon">
+                      <Check size={11} strokeWidth={3} />
+                    </span>
+                    <span>At least 6 characters</span>
+                  </div>
+                ) : null
+              }
+            />
+
+            <PasswordInput
+              id="confirm-password"
+              label="Confirm password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearError('confirmPassword');
+              }}
+              required
+              autoComplete="new-password"
+              disabled={isSubmitting}
+              error={fieldErrors.confirmPassword}
+              requirements={
+                confirmPassword.length > 0 ? (
+                  <div className={`auth-requirement-pill ${doPasswordsMatch ? 'met' : 'unmet'}`}>
+                    <span className="auth-requirement-icon">
+                      <Check size={11} strokeWidth={3} />
+                    </span>
+                    <span>{doPasswordsMatch ? 'Passwords match' : 'Passwords do not match'}</span>
+                  </div>
+                ) : null
+              }
+            />
+
+            {/* Terms Acknowledgement */}
+            <div className={`auth-checkbox-group ${fieldErrors.agreeTerms ? 'has-error' : ''}`}>
+              <label className="auth-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    clearError('agreeTerms');
+                  }}
+                  disabled={isSubmitting}
+                  className="auth-checkbox"
+                />
+                <span className="auth-checkbox-custom" aria-hidden="true">
+                  {agreeTerms && <Check size={12} strokeWidth={3} />}
+                </span>
+                <span className="auth-checkbox-text">
+                  I agree to VerifyMe's <span className="auth-inline-highlight">Terms of Service</span> and{' '}
+                  <span className="auth-inline-highlight">Privacy Policy</span>.
+                </span>
+              </label>
+              {fieldErrors.agreeTerms && (
+                <div className="auth-field-error" role="alert">
+                  <AlertCircle size={14} className="auth-field-error-icon" />
+                  <span>{fieldErrors.agreeTerms}</span>
+                </div>
+              )}
+            </div>
+
+            <AuthButton
+              type="submit"
+              variant="primary"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Create Account
+            </AuthButton>
+          </form>
+
+          {/* Footer switcher */}
+          <footer className="auth-view-footer">
+            <span className="auth-view-footer-text">Already have an account?</span>
+            <button
+              type="button"
+              className="auth-link-action"
+              onClick={() => handleTabSwitch('login')}
+            >
+              Sign In
+            </button>
+          </footer>
+        </div>
+      )}
+
+      {/* =====================================================================
+          VIEW 3: FORGOT PASSWORD
+          ===================================================================== */}
+      {activeTab === 'forgot' && (
+        <div id="auth-forgot-panel" role="tabpanel" className="auth-form-view">
+          <header className="auth-view-header">
+            <h2 className="auth-view-title">Reset your password</h2>
+            <p className="auth-view-subtitle">Enter your registered email to receive password reset instructions.</p>
+          </header>
+
+          <form onSubmit={handleForgotSubmit} noValidate className="auth-form">
+            <FormField
+              id="reset-email"
+              label="Registered email address"
+              type="email"
+              placeholder="name@organization.com"
+              icon={Mail}
+              value={resetEmail}
+              onChange={(e) => {
+                setResetEmail(e.target.value);
+                clearError('resetEmail');
+              }}
+              required
+              autoComplete="email"
+              disabled={isSubmitting}
+              error={fieldErrors.resetEmail}
+            />
+
+            <AuthButton
+              type="submit"
+              variant="primary"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Send Reset Link
+            </AuthButton>
+
+            <button
+              type="button"
+              className="auth-back-to-login-btn"
+              onClick={() => handleTabSwitch('login')}
+              disabled={isSubmitting}
+            >
+              <ArrowLeft size={16} />
+              <span>Return to Sign In</span>
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Security Footnote */}
+      <div className="auth-security-footnote">
+        <div className="auth-security-item">
+          <span className="auth-security-dot" />
+          <span>TLS 1.3 Encrypted</span>
+        </div>
+        <div className="auth-security-divider">•</div>
+        <div className="auth-security-item">
+          <span className="auth-security-dot" />
+          <span>Deterministic Verification</span>
+        </div>
+      </div>
+    </AuthLayout>
   );
 };
 

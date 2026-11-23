@@ -7,18 +7,18 @@ import {
   Shield, 
   ShieldAlert, 
   ShieldCheck, 
-  Activity, 
-  Search, 
   AlertTriangle,
   ArrowRight,
   History,
   Phone,
   Mail,
-  Globe
+  Globe,
+  Search
 } from 'lucide-react';
+import VerifyMeLoader from '../auth/VerifyMeLoader';
 import './HistoryPanel.css';
 
-const HistoryPanel = ({ refreshTrigger }) => {
+export const HistoryPanel = ({ refreshTrigger, onInspectAudit }) => {
   const { user } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,10 @@ const HistoryPanel = ({ refreshTrigger }) => {
   const [filterType, setFilterType] = useState('all');
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -47,7 +50,7 @@ const HistoryPanel = ({ refreshTrigger }) => {
       },
       (err) => {
         console.error("Error fetching history:", err);
-        setError('Unable to load verification audit logs.');
+        setError('Unable to load verification history.');
         setLoading(false);
       }
     );
@@ -55,24 +58,53 @@ const HistoryPanel = ({ refreshTrigger }) => {
     return () => unsubscribe();
   }, [user, refreshTrigger]);
 
-  const stats = {
-    total: history.length,
-    lowRisk: history.filter(h => h.riskLevel === 'LOW RISK' || h.technicalStatus === 'TECHNICAL CHECKS PASSED').length,
-    moderateRisk: history.filter(h => h.riskLevel === 'MODERATE RISK' || h.riskLevel === 'LIMITED VERIFICATION').length,
-    highRisk: history.filter(h => h.riskLevel === 'HIGH RISK' || h.technicalStatus === 'CONFIRMED THREAT').length,
-  };
+  const total = history.length;
+  const lowRisk = history.filter(h => h.riskLevel === 'LOW RISK' || h.technicalStatus === 'TECHNICAL CHECKS PASSED').length;
+  const moderateRisk = history.filter(h => h.riskLevel === 'MODERATE RISK' || h.riskLevel === 'LIMITED VERIFICATION' || h.riskLevel === 'SUSPICIOUS').length;
+  const highRisk = history.filter(h => h.riskLevel === 'HIGH RISK' || h.technicalStatus === 'CONFIRMED THREAT').length;
 
-  const getRiskIcon = (level, techStatus) => {
-    if (level === 'LOW RISK' || techStatus === 'TECHNICAL CHECKS PASSED') return <ShieldCheck className="w-5 h-5 text-emerald-400" />;
-    if (level === 'HIGH RISK' || techStatus === 'CONFIRMED THREAT') return <ShieldAlert className="w-5 h-5 text-rose-400" />;
-    if (level === 'INVALID INPUT' || techStatus === 'INVALID INPUT') return <AlertTriangle className="w-5 h-5 text-slate-400" />;
-    return <Shield className="w-5 h-5 text-amber-400" />;
+  const getRiskDetails = (level, techStatus) => {
+    if (level === 'LOW RISK' || techStatus === 'TECHNICAL CHECKS PASSED') {
+      return {
+        icon: ShieldCheck,
+        label: 'Passed',
+        color: '#2E7D5B',
+        bg: '#EFF8F3',
+        border: '#CDE8D8'
+      };
+    }
+    if (level === 'HIGH RISK' || techStatus === 'CONFIRMED THREAT') {
+      return {
+        icon: ShieldAlert,
+        label: 'High Risk',
+        color: '#D94E4E',
+        bg: '#FEF3F3',
+        border: '#FCDCDC'
+      };
+    }
+    if (level === 'INVALID INPUT' || techStatus === 'INVALID INPUT') {
+      return {
+        icon: AlertTriangle,
+        label: 'Invalid',
+        color: '#737D76',
+        bg: '#F4F7F4',
+        border: '#E7EEE9'
+      };
+    }
+    return {
+      icon: Shield,
+      label: 'Caution',
+      color: '#B45309',
+      bg: '#FEF3C7',
+      border: '#FDE68A'
+    };
   };
 
   const getTypeIcon = (type) => {
-    if (type === 'phone') return <Phone className="w-3.5 h-3.5 text-slate-400" />;
-    if (type === 'email') return <Mail className="w-3.5 h-3.5 text-slate-400" />;
-    return <Globe className="w-3.5 h-3.5 text-slate-400" />;
+    const t = (type || '').toLowerCase();
+    if (t === 'phone') return Phone;
+    if (t === 'email') return Mail;
+    return Globe;
   };
 
   const formatDate = (timestamp) => {
@@ -88,15 +120,16 @@ const HistoryPanel = ({ refreshTrigger }) => {
 
   const maskTarget = (type, target) => {
     if (!target) return '';
-    if (type === 'email') {
+    const t = (type || '').toLowerCase();
+    if (t === 'email') {
       const parts = target.split('@');
       if (parts.length === 2) {
         return `${parts[0].charAt(0)}***@${parts[1]}`;
       }
     }
-    if (type === 'phone') {
-      if (target.length > 5) {
-        return `${target.slice(0, 3)}***${target.slice(-2)}`;
+    if (t === 'phone') {
+      if (target.length > 6) {
+        return `${target.slice(0, 3)}***${target.slice(-3)}`;
       }
     }
     return target;
@@ -108,36 +141,36 @@ const HistoryPanel = ({ refreshTrigger }) => {
 
   if (loading) {
     return (
-      <section className="history-panel-root">
-        <div className="history-loading-box">
-          <Activity className="w-5 h-5 text-indigo-400 animate-spin" />
-          <span>Synchronizing audit telemetry...</span>
+      <div className="history-card-root">
+        <div className="history-loading-state">
+          <VerifyMeLoader size="md" variant="mint" label="Loading verifications..." />
+          <span className="history-loading-text">Loading verification activity...</span>
         </div>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="history-panel-root">
-      <div className="history-top-header">
-        <div className="history-title-group">
-          <div className="history-icon-badge">
-            <History className="w-4 h-4 text-indigo-400" />
+    <div className="history-card-root">
+      {/* Header with Title and Filter Buttons */}
+      <div className="history-header-bar">
+        <div className="history-title-wrap">
+          <div className="history-icon-box">
+            <History className="w-4 h-4 text-[#49B99A]" />
           </div>
           <div>
-            <h2 className="history-section-title">Recent Intelligence Audits</h2>
-            <p className="history-section-desc">Audit activity record of scanned digital entities.</p>
+            <h2 className="history-heading">Recent Verification Activity</h2>
+            <p className="history-subheading">Past checks and security assessments.</p>
           </div>
         </div>
 
-        {/* Filter Pills */}
-        {stats.total > 0 && (
-          <div className="history-filter-pills">
+        {total > 0 && (
+          <div className="history-filter-strip" role="tablist" aria-label="Filter verification types">
             {['all', 'phone', 'email', 'website'].map(t => (
               <button
                 key={t}
                 type="button"
-                className={`filter-btn ${filterType === t ? 'active' : ''}`}
+                className={`history-filter-btn ${filterType === t ? 'active' : ''}`}
                 onClick={() => setFilterType(t)}
               >
                 {t.toUpperCase()}
@@ -147,92 +180,143 @@ const HistoryPanel = ({ refreshTrigger }) => {
         )}
       </div>
 
-      {/* Aggregate Stats Cards */}
-      {stats.total > 0 && (
-        <div className="history-stat-strip">
-          <div className="stat-pill-card">
-            <span className="stat-pill-num text-white">{stats.total}</span>
-            <span className="stat-pill-label">Total Audits</span>
+      {/* Aggregate Counts Strip */}
+      {total > 0 && (
+        <div className="history-metric-bar">
+          <div className="metric-pill">
+            <span className="metric-num">{total}</span>
+            <span className="metric-label">Total Checks</span>
           </div>
-          <div className="stat-pill-card">
-            <span className="stat-pill-num text-emerald-400">{stats.lowRisk}</span>
-            <span className="stat-pill-label">Technical Checks Passed</span>
+          <div className="metric-pill passed">
+            <span className="metric-num">{lowRisk}</span>
+            <span className="metric-label">Passed</span>
           </div>
-          <div className="stat-pill-card">
-            <span className="stat-pill-num text-amber-400">{stats.moderateRisk}</span>
-            <span className="stat-pill-label">Limited Verification</span>
+          <div className="metric-pill caution">
+            <span className="metric-num">{moderateRisk}</span>
+            <span className="metric-label">Caution</span>
           </div>
-          <div className="stat-pill-card">
-            <span className="stat-pill-num text-rose-400">{stats.highRisk}</span>
-            <span className="stat-pill-label">High Risk Flagged</span>
+          <div className="metric-pill flagged">
+            <span className="metric-num">{highRisk}</span>
+            <span className="metric-label">High Risk</span>
           </div>
         </div>
       )}
 
       {error ? (
-        <div className="history-error-box">
-          <AlertTriangle className="w-5 h-5 text-rose-400" />
+        <div className="history-error-state">
+          <AlertTriangle className="w-4 h-4 text-[#D94E4E]" />
           <span>{error}</span>
         </div>
-      ) : stats.total === 0 ? (
-        <div className="history-empty-box">
-          <div className="empty-radar-circle">
-            <Search className="w-6 h-6 text-indigo-400" />
+      ) : total === 0 ? (
+        /* Empty State */
+        <div className="history-empty-state">
+          <div className="history-empty-icon-circle">
+            <Search className="w-5 h-5 text-[#49B99A]" />
           </div>
-          <h3 className="empty-title">No Audit History Recorded</h3>
-          <p className="empty-sub">
-            Your telemetry and threat reports will automatically populate here after you conduct your first investigation.
+          <h3 className="history-empty-title">No verifications recorded yet</h3>
+          <p className="history-empty-description">
+            Your verification history and threat reports will appear here once you analyze a phone number, email address, or website.
+          </p>
+        </div>
+      ) : filteredHistory.length === 0 ? (
+        <div className="history-empty-state">
+          <p className="history-empty-description">
+            No verification records matching the "{filterType}" filter.
           </p>
         </div>
       ) : (
-        <div className="history-list-wrapper">
-          <div className="history-items-grid">
-            {filteredHistory.slice(0, 4).map(item => {
-              const isLow = item.riskLevel === 'LOW RISK' || item.technicalStatus === 'TECHNICAL CHECKS PASSED';
-              const isHigh = item.riskLevel === 'HIGH RISK' || item.technicalStatus === 'CONFIRMED THREAT';
-              const isInvalid = item.riskLevel === 'INVALID INPUT' || item.technicalStatus === 'INVALID INPUT';
-              const riskColor = isInvalid ? '#94A3B8' : (isLow ? '#10B981' : (isHigh ? '#EF4444' : '#F59E0B'));
+        /* Items List */
+        <div className="history-items-container">
+          <div className="history-rows-list">
+            {filteredHistory.slice(0, 5).map(item => {
+              const risk = getRiskDetails(item.riskLevel, item.technicalStatus);
+              const RiskIcon = risk.icon;
+              const TypeIcon = getTypeIcon(item.type);
+              const targetStr = item.targetValue || item.inputValue || item.target || '';
+              const scoreVal = item.score ?? item.technicalHealthScore ?? 0;
 
               return (
-                <div key={item.id} className="history-item-row">
-                  <div className="item-risk-indicator">
-                    {getRiskIcon(item.riskLevel, item.technicalStatus)}
+                <div 
+                  key={item.id} 
+                  className="history-row"
+                  onClick={() => {
+                    if (onInspectAudit) onInspectAudit(item);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      if (onInspectAudit) onInspectAudit(item);
+                    }
+                  }}
+                >
+                  <div className="history-row-left">
+                    <div 
+                      className="history-risk-badge" 
+                      style={{ backgroundColor: risk.bg, color: risk.color, borderColor: risk.border }}
+                      title={`Status: ${risk.label}`}
+                    >
+                      <RiskIcon className="w-4 h-4" />
+                    </div>
+
+                    <div className="history-row-details">
+                      <div className="history-row-target">
+                        {maskTarget(item.type, targetStr)}
+                      </div>
+                      <div className="history-row-meta">
+                        <span className="history-type-tag">
+                          <TypeIcon className="w-3 h-3" />
+                          <span>{(item.type || 'target').toUpperCase()}</span>
+                        </span>
+                        <span className="history-dot">•</span>
+                        <span className="history-time">{formatDate(item.createdAt)}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="item-details-col">
-                    <div className="item-target-text font-mono">
-                      {maskTarget(item.type, item.targetValue || item.inputValue)}
+                  <div className="history-row-right">
+                    <div 
+                      className="history-status-chip"
+                      style={{ backgroundColor: risk.bg, color: risk.color, borderColor: risk.border }}
+                    >
+                      {risk.label}
                     </div>
-                    <div className="item-sub-meta">
-                      <span className="item-type-badge">
-                        {getTypeIcon(item.type)}
-                        <span>{(item.type || 'target').toUpperCase()}</span>
-                      </span>
-                      <span className="item-dot">•</span>
-                      <span className="item-time">{formatDate(item.createdAt)}</span>
-                    </div>
-                  </div>
 
-                  <div className="item-score-col" style={{ color: riskColor }}>
-                    <span className="item-score-num">{item.score || 0}</span>
-                    <span className="item-score-denom">/100</span>
+                    <div className="history-score-tag">
+                      <span className="score-num" style={{ color: risk.color }}>{scoreVal}</span>
+                      <span className="score-denom">/100</span>
+                    </div>
+
+                    <button 
+                      type="button" 
+                      className="history-inspect-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onInspectAudit) onInspectAudit(item);
+                      }}
+                      title="Inspect full report"
+                      aria-label="Inspect full report"
+                    >
+                      <span>Report</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
-          
-          {history.length > 4 && (
-            <div className="history-view-all-wrap">
-              <Link to="/history" className="history-view-all-btn">
-                <span>View Complete Audit Log ({history.length})</span>
+
+          {history.length > 5 && (
+            <div className="history-footer-wrap">
+              <Link to="/history" className="history-view-all-link">
+                <span>View Complete Verification History ({history.length})</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           )}
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

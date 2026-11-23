@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase/config';
-import { collection, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { Shield, ShieldAlert, ShieldCheck, Activity, Search, Filter, Phone, Mail, Link as LinkIcon } from 'lucide-react';
 import VerificationResult from './VerificationResult';
 import './ExpandedHistory.css';

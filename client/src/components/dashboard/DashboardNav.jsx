@@ -19,22 +19,27 @@ const DashboardNav = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const userInitial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : (user?.email?.charAt(0).toUpperCase() || 'U');
-  const userFirst = user?.displayName ? user.displayName.split(' ')[0] : (user?.email?.split('@')[0] || 'User');
+  const userInitial = user?.displayName 
+    ? user.displayName.charAt(0).toUpperCase() 
+    : (user?.email?.charAt(0).toUpperCase() || 'U');
+    
+  const userFirst = user?.displayName 
+    ? user.displayName.split(' ')[0] 
+    : (user?.email?.split('@')[0] || 'User');
 
   const navItems = [
-    { to: '/dashboard', label: 'Workspace', icon: LayoutDashboard },
-    { to: '/jobshield', label: 'JobShield', icon: Briefcase },
-    { to: '/credentialcheck', label: 'CredentialCheck', icon: FileCheck2 },
-    { to: '/history', label: 'Audit History', icon: History },
-    { to: '/profile', label: 'Profile', icon: User }
+    { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
+    { to: '/jobshield', label: 'Job Offers', icon: Briefcase },
+    { to: '/credentialcheck', label: 'Documents', icon: FileCheck2 },
+    { to: '/history', label: 'History', icon: History },
+    { to: '/profile', label: 'My Account', icon: User }
   ];
 
   return (
-    <nav className="dash-nav-header">
+    <header className="dash-nav-header">
       <div className="dash-nav-container">
         {/* Brand Logo */}
-        <Link to="/" className="dash-brand-logo">
+        <Link to="/dashboard" className="dash-brand-logo" title="VerifyMe Dashboard">
           <div className="dash-brand-icon">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -42,7 +47,7 @@ const DashboardNav = () => {
         </Link>
         
         {/* Desktop Navigation Links */}
-        <div className="dash-center-pills">
+        <nav className="dash-center-pills" aria-label="Main Navigation">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.to;
@@ -51,32 +56,35 @@ const DashboardNav = () => {
                 key={item.to}
                 to={item.to} 
                 className={`dash-pill-link ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
               >
                 <Icon className="w-4 h-4" />
                 <span>{item.label}</span>
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         {/* Right Status & User Menu */}
         <div className="dash-right-actions">
-          <div className="dash-engine-status" title="Real-time verification engines online">
+          <div className="dash-engine-status" title="Real-time verification engines active">
             <span className="engine-dot" />
             <span className="engine-text">Engines Active</span>
           </div>
 
-          <div className="dash-user-pill">
+          <Link to="/profile" className="dash-user-pill" title="View profile">
             <div className="dash-user-avatar">
               {userInitial}
             </div>
             <span className="dash-user-name">{userFirst}</span>
-          </div>
+          </Link>
 
           <button 
+            type="button"
             onClick={logout} 
             className="dash-logout-btn" 
-            title="Terminate session"
+            title="Log out"
+            aria-label="Log out"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Logout</span>
@@ -87,7 +95,8 @@ const DashboardNav = () => {
             type="button"
             className="dash-mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -105,18 +114,29 @@ const DashboardNav = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`dash-mobile-item ${isActive ? 'active' : ''}`}
+                  className={`dash-mobile-link ${isActive ? 'active' : ''}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
+            <button
+              type="button"
+              className="dash-mobile-link logout"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                logout();
+              }}
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 

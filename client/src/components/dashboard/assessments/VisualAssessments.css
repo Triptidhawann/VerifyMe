@@ -377,7 +377,7 @@
   border: none;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #174C3C;
+  color: #2E7D5B;
   cursor: pointer;
   transition: color 0.15s ease;
   padding: 0.25rem 0.5rem;
@@ -385,8 +385,8 @@
 }
 
 .progressive-toggle-all-btn:hover {
-  color: #0F3328;
-  background: #EAE8DE;
+  color: #1E5C40;
+  background: #EFF8F3;
 }
 
 .accordion-item {
@@ -454,7 +454,7 @@
 
 .accordion-chevron.open {
   transform: rotate(180deg);
-  color: #174C3C;
+  color: #49B99A;
 }
 
 .accordion-body {

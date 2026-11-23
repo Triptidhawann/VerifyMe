@@ -1,63 +1,64 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   FileUp, 
-  UploadCloud, 
-  FileCheck, 
-  Building2, 
+  Upload, 
+  X, 
+  AlertCircle, 
+  ChevronDown, 
+  Building, 
   Globe, 
   Hash, 
-  CheckCircle2, 
-  AlertCircle, 
-  FileText, 
-  X, 
   GraduationCap, 
   Award, 
   Briefcase, 
   BookOpen, 
   Scroll, 
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  ShieldCheck,
-  Search,
-  Check
+  Sparkles, 
+  ShieldCheck, 
+  ArrowRight,
+  FileCheck2,
+  Check,
+  Info
 } from 'lucide-react';
+import VerifyMeLoader from '../auth/VerifyMeLoader';
+import './CredentialCheck.css';
 
 const CATEGORIES = [
   { 
     id: 'AUTO', 
-    label: 'Auto-Detect Category', 
-    desc: 'Determined automatically via structural claim analysis',
+    label: 'Auto-detect Category', 
+    badge: 'Recommended',
+    desc: 'Determined automatically via structural document analysis',
     icon: Sparkles
   },
   { 
     id: 'INTERNSHIP', 
     label: 'Internship Certificate', 
-    desc: 'Summer, industrial, or project internship letter',
+    desc: 'Summer, industrial, or project internship completion letter',
     icon: Award
   },
   { 
     id: 'COURSE_COMPLETION', 
     label: 'Course Completion', 
-    desc: 'Online platform, academy, or bootcamp certificate',
+    desc: 'Online platform, technical academy, or bootcamp certificate',
     icon: BookOpen
   },
   { 
     id: 'TRAINING', 
     label: 'Training Certificate', 
-    desc: 'Vocational, industrial, or corporate workshop',
+    desc: 'Vocational, industrial, or corporate workshop credential',
     icon: Scroll
   },
   { 
     id: 'EXPERIENCE', 
     label: 'Experience Letter', 
-    desc: 'Relieving letter, work experience, service certificate',
+    desc: 'Relieving letter, work tenure, or service certificate',
     icon: Briefcase
   },
   { 
     id: 'ACADEMIC', 
     label: 'Academic Degree / Marksheet', 
-    desc: 'University degree, diploma, semester grade card',
+    desc: 'University degree, diploma, or semester marksheet',
     icon: GraduationCap
   },
   { 
@@ -68,19 +69,11 @@ const CATEGORIES = [
   }
 ];
 
-const PROCESSING_STAGES = [
-  { label: 'Reading document buffer & verifying cryptographic integrity', detail: 'Computing SHA-256 hash & analyzing PDF object streams' },
-  { label: 'Extracting credential details & structured claims', detail: 'Parsing candidate name, organization, dates & serial identifiers' },
-  { label: 'Checking issuer information against statutory directories', detail: 'Querying MCA, UGC, AICTE & accredited institution registries' },
-  { label: 'Examining document integrity & forensic markers', detail: 'Inspecting digital signature seals, optical QR codes & font anomalies' },
-  { label: 'Synthesizing evidence-driven investigation report', detail: 'Formulating independent audit verdict and actionable next steps' }
-];
-
-const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
+export const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileBase64, setFileBase64] = useState('');
   const [fileError, setFileError] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('AUTO');
   const [issuerName, setIssuerName] = useState('');
   const [issuerWebsite, setIssuerWebsite] = useState('');
@@ -88,24 +81,7 @@ const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
   const [candidateConsent, setCandidateConsent] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
-  // Staged loading progress state
-  const [activeStageIndex, setActiveStageIndex] = useState(0);
-
   const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    let interval;
-    if (loading) {
-      setActiveStageIndex(0);
-      interval = setInterval(() => {
-        setActiveStageIndex(prev => {
-          if (prev < PROCESSING_STAGES.length - 1) return prev + 1;
-          return prev;
-        });
-      }, 700);
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
 
   const handleFileProcess = (file) => {
     setFileError(null);
@@ -132,25 +108,23 @@ const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
       setFileBase64(reader.result);
     };
     reader.onerror = () => {
-      setFileError('Failed to read document buffer.');
+      setFileError('Failed to read document buffer. Please try selecting the file again.');
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDrag = (e) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    setIsDragOver(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileProcess(e.dataTransfer.files[0]);
     }
@@ -160,6 +134,7 @@ const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
     if (e) e.stopPropagation();
     setSelectedFile(null);
     setFileBase64('');
+    setFileError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -172,8 +147,10 @@ const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setFileError(null);
+
     if (!fileBase64 || !selectedFile) {
-      setFileError('Please select or drop a certificate document before submitting.');
+      setFileError('Please select or drop a credential document before submitting.');
       return;
     }
 
@@ -189,304 +166,294 @@ const CredentialCheckSubmit = ({ onSubmit, loading, error }) => {
     });
   };
 
-  // PROCESSING / LOADING VIEW
-  if (loading) {
-    return (
-      <div className="cc-card cc-processing-card animate-fade-in">
-        <div className="cc-processing-header">
-          <div className="cc-processing-spinner-box">
-            <div className="cc-spinner-ring" />
-            <Search className="w-6 h-6 text-[#174C3C] animate-pulse" />
-          </div>
-          <div>
-            <span className="cc-processing-badge">Forensic Investigation Active</span>
-            <h2 className="cc-processing-title">{selectedFile?.name || 'Document Verification'}</h2>
-            <p className="cc-processing-sub">
-              Executing multi-dimensional verification across institutional registries & cryptographic checks
-            </p>
-          </div>
-        </div>
-
-        <div className="cc-processing-stages-list">
-          {PROCESSING_STAGES.map((stage, idx) => {
-            const isDone = idx < activeStageIndex;
-            const isCurrent = idx === activeStageIndex;
-            return (
-              <div 
-                key={idx}
-                className={`cc-stage-item ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}`}
-              >
-                <div className="cc-stage-indicator">
-                  {isDone ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#15803D]" />
-                  ) : isCurrent ? (
-                    <div className="cc-stage-pulse-dot" />
-                  ) : (
-                    <div className="cc-stage-pending-dot" />
-                  )}
-                </div>
-                <div className="cc-stage-text-group">
-                  <span className="cc-stage-label">{stage.label}</span>
-                  <span className="cc-stage-detail">{stage.detail}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="cc-entry-container animate-fade-in">
-      {/* Workspace Introduction */}
-      <div className="cc-intro-banner">
-        <div className="flex flex-col gap-1.5">
-          <div className="inline-flex items-center gap-2">
-            <span className="cc-pill-tag">India-First Credential Intelligence</span>
-            <span className="text-xs text-[#526056] font-medium">• Statutory MCA, UGC & DigiLocker Corroboration</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#202923] tracking-tight">
-            Document Forensics & Credential Verification
-          </h1>
-          <p className="text-sm text-[#526056] max-w-2xl leading-relaxed">
-            Upload an academic degree, marksheet, internship letter, course completion certificate, or experience document. Verify issuer legitimacy, document tampering, and claim consistency.
-          </p>
-        </div>
+    <div className="cc-intake-root fadeIn">
+      {/* 1. Page Introduction */}
+      <div className="cc-intake-header">
+        <h1 className="cc-intake-title">Verify a document. Understand what it proves.</h1>
+        <p className="cc-intake-subtitle">
+          Examine certificates, academic records and experience documents for issuer legitimacy, document integrity and claim consistency.
+        </p>
       </div>
 
-      {error && (
-        <div className="p-3.5 bg-[#FEE2E2] border border-[#FECACA] rounded-xl text-xs text-[#991B1B] flex items-start gap-2.5 shadow-sm">
-          <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />
-          <div>
-            <strong>Investigation Error:</strong> {error}
-          </div>
-        </div>
-      )}
-
-      {fileError && (
-        <div className="p-3.5 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl text-xs text-[#92400E] flex items-start gap-2.5 shadow-sm">
-          <AlertCircle className="w-4 h-4 text-[#B45309] shrink-0 mt-0.5" />
-          <div>{fileError}</div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* SECTION 1: INTERACTIVE DRAG & DROP SURFACE */}
-        <div className="cc-surface-card">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#202923]">
-              1. Upload Credential Document
-            </label>
-            <span className="text-xs text-[#7E8D82]">PDF, PNG, JPEG • Max 10 MB</span>
-          </div>
-
-          {!selectedFile ? (
-            <div 
-              className={`cc-dropzone-box ${dragActive ? 'dragging' : ''}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input 
-                ref={fileInputRef}
-                type="file" 
-                accept=".pdf,image/png,image/jpeg,image/jpg"
-                onChange={(e) => e.target.files && handleFileProcess(e.target.files[0])}
-                className="hidden" 
-              />
-              <div className="cc-dropzone-icon">
-                <UploadCloud className="w-8 h-8 text-[#174C3C]" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-[#202923]">
-                  Click to select a file <span className="font-normal text-[#526056]">or drag and drop here</span>
-                </p>
-                <p className="text-xs text-[#7E8D82] mt-1">
-                  Supports digital certificates, scanned marksheets & academic transcripts
-                </p>
-              </div>
+      {/* 2. Main Submission Workspace Card */}
+      <div className="cc-workspace-card">
+        <form onSubmit={handleSubmit} noValidate className="cc-intake-form">
+          {/* SECTION A: DOCUMENT UPLOAD AREA */}
+          <div className="cc-form-section">
+            <div className="cc-section-header">
+              <label className="cc-section-label">
+                Upload Credential Document
+              </label>
+              <span className="cc-section-hint font-mono">
+                PDF, PNG, JPEG • Max 10 MB
+              </span>
             </div>
-          ) : (
-            <div className="cc-selected-file-card">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="cc-file-avatar">
-                  <FileText className="w-5 h-5 text-[#174C3C]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#202923] truncate">
-                    {selectedFile.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] font-semibold text-[#15803D] bg-[#EAF6ED] px-2 py-0.5 rounded border border-[#A7D8B4]">
-                      Ready for analysis
-                    </span>
-                    <span className="text-xs text-[#7E8D82] font-mono">
-                      {formatFileSize(selectedFile.size)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleRemoveFile}
-                className="cc-remove-file-btn"
-                title="Remove and select another file"
+
+            {!selectedFile ? (
+              <div 
+                className={`cc-dropzone ${isDragOver ? 'drag-over' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                aria-label="Upload document area"
               >
-                <X className="w-4 h-4" />
-                <span>Replace</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* SECTION 2: DOCUMENT CATEGORY SELECTION */}
-        <div className="cc-surface-card">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#202923]">
-              2. Select Document Category
-            </label>
-            <span className="text-xs text-[#7E8D82]">Tailors cross-validation rules</span>
-          </div>
-
-          <div className="cc-categories-grid">
-            {CATEGORIES.map(cat => {
-              const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`cc-category-tile ${isSelected ? 'selected' : ''}`}
-                  onClick={() => setSelectedCategory(cat.id)}
-                >
-                  <div className="cc-tile-icon-box">
-                    <Icon className="w-4 h-4" />
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept=".pdf,image/png,image/jpeg,image/jpg"
+                  onChange={(e) => e.target.files && handleFileProcess(e.target.files[0])}
+                  className="hidden" 
+                />
+                <div className="cc-dropzone-icon-box">
+                  <Upload className="w-6 h-6 text-[#49B99A]" />
+                </div>
+                <div className="cc-dropzone-content">
+                  <p className="cc-dropzone-primary-text">
+                    <span className="text-[#49B99A] font-semibold underline">Click to upload</span> or drag and drop document
+                  </p>
+                  <p className="cc-dropzone-sub-text">
+                    Digital certificates, scanned academic marksheets, or employment letters
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="cc-file-selected-card fadeIn">
+                <div className="cc-file-info">
+                  <div className="cc-file-icon-box">
+                    <FileCheck2 className="w-5 h-5 text-[#2E7D5B]" />
                   </div>
-                  <div className="cc-tile-body">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="cc-tile-title">{cat.label}</span>
-                      {isSelected && (
-                        <span className="cc-tile-check">
-                          <Check className="w-3 h-3 text-[#174C3C]" />
-                        </span>
-                      )}
+                  <div>
+                    <div className="cc-file-name font-mono">{selectedFile.name}</div>
+                    <div className="cc-file-meta">
+                      <span className="cc-ready-badge font-mono">Ready for analysis</span>
+                      <span className="cc-file-size font-mono">{formatFileSize(selectedFile.size)}</span>
+                      <span className="cc-file-type font-mono uppercase">{selectedFile.type?.split('/')[1] || 'PDF'}</span>
                     </div>
-                    <span className="cc-tile-desc">{cat.desc}</span>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+                <div className="cc-file-actions">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="cc-file-action-btn"
+                    title="Choose a different file"
+                  >
+                    <FileUp className="w-3.5 h-3.5" />
+                    <span>Replace</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="cc-file-action-btn danger"
+                    title="Remove file"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* SECTION 3: OPTIONAL ISSUER / CONTEXT PARAMETERS (COLLAPSIBLE) */}
-        <div className="cc-surface-card">
-          <button
-            type="button"
-            className="w-full flex items-center justify-between text-left py-1"
-            onClick={() => setShowOptionalFields(!showOptionalFields)}
-          >
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#202923] block">
-                3. Optional Context Parameters
-              </span>
-              <span className="text-xs text-[#7E8D82] block mt-0.5">
-                Helps disambiguate organization registries if document text is degraded
+          {/* SECTION B: DOCUMENT CATEGORY SELECTION */}
+          <div className="cc-form-section">
+            <div className="cc-section-header">
+              <label className="cc-section-label">
+                Document Category
+              </label>
+              <span className="cc-section-hint">
+                Selects tailored forensic and directory cross-match rules
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#174C3C]">
-              <span>{showOptionalFields ? 'Hide parameters' : 'Provide optional details'}</span>
-              {showOptionalFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+
+            <div className="cc-categories-grid" role="radiogroup" aria-label="Document Category Selection">
+              {CATEGORIES.map(cat => {
+                const Icon = cat.icon;
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={`cc-category-tile ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedCategory(cat.id)}
+                  >
+                    <div className="cc-tile-icon-box">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="cc-tile-body">
+                      <div className="cc-tile-title-row">
+                        <span className="cc-tile-title">{cat.label}</span>
+                        {cat.badge && (
+                          <span className="cc-tile-badge font-mono">{cat.badge}</span>
+                        )}
+                        {isSelected && (
+                          <span className="cc-tile-check">
+                            <Check className="w-3.5 h-3.5 text-[#2E7D5B] stroke-[3]" />
+                          </span>
+                        )}
+                      </div>
+                      <span className="cc-tile-desc">{cat.desc}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          </button>
+          </div>
 
-          {showOptionalFields && (
-            <div className="cc-optional-inputs-pane animate-fade-in pt-3 mt-2 border-t border-[#DCE8DF]">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold text-[#526056] block mb-1">
-                    Claimed Issuer (Company/College)
-                  </label>
-                  <div className="relative">
-                    <input 
-                      type="text"
-                      placeholder="e.g. AWS or Infosys"
-                      value={issuerName}
-                      onChange={(e) => setIssuerName(e.target.value)}
-                      className="w-full text-xs"
-                    />
-                  </div>
+          {/* SECTION C: OPTIONAL CONTEXT (EXPANDABLE) */}
+          <div className="cc-optional-context-box">
+            <button
+              type="button"
+              className="cc-optional-toggle"
+              onClick={() => setShowOptionalFields(!showOptionalFields)}
+              aria-expanded={showOptionalFields}
+            >
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-sm text-[#202923]">Add document details (optional)</span>
+                <span className="text-xs text-[#737D76]">
+                  Helps disambiguate organization registries if document scan is low-contrast
+                </span>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-[#737D76] transition-transform ${showOptionalFields ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showOptionalFields && (
+              <div className="cc-optional-fields-pane fadeIn">
+                <div className="cc-context-notice">
+                  <Info className="w-4 h-4 text-[#737D76] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#556058] leading-relaxed">
+                    <strong>Note:</strong> Any information supplied here helps cross-reference official directories, but is <em>not</em> treated as independently verified simply because it was entered.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="text-[11px] font-bold text-[#526056] block mb-1">
-                    Official Website / Domain
-                  </label>
-                  <div className="relative">
-                    <input 
-                      type="text"
-                      placeholder="e.g. aws.amazon.com or infosys.com"
-                      value={issuerWebsite}
-                      onChange={(e) => setIssuerWebsite(e.target.value)}
-                      className="w-full text-xs"
-                    />
+                <div className="cc-optional-fields-grid">
+                  <div className="cc-optional-field">
+                    <label htmlFor="cc-claimed-issuer" className="cc-sub-label">
+                      Claimed Issuer (Company or Institution)
+                    </label>
+                    <div className="cc-field-inner">
+                      <Building className="w-4 h-4 text-[#94A098] shrink-0" />
+                      <input 
+                        id="cc-claimed-issuer"
+                        type="text"
+                        placeholder="e.g. AWS, Infosys, or Delhi University"
+                        value={issuerName}
+                        onChange={(e) => setIssuerName(e.target.value)}
+                        disabled={loading}
+                        className="cc-sub-input"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="text-[11px] font-bold text-[#526056] block mb-1">
-                    Certificate / Roll / ID Number
-                  </label>
-                  <div className="relative">
-                    <input 
-                      type="text"
-                      placeholder="e.g. INFY-INT-2026-88421"
-                      value={certificateNumber}
-                      onChange={(e) => setCertificateNumber(e.target.value)}
-                      className="w-full text-xs"
-                    />
+                  <div className="cc-optional-field">
+                    <label htmlFor="cc-claimed-website" className="cc-sub-label">
+                      Official Website or Domain
+                    </label>
+                    <div className="cc-field-inner">
+                      <Globe className="w-4 h-4 text-[#94A098] shrink-0" />
+                      <input 
+                        id="cc-claimed-website"
+                        type="text"
+                        placeholder="e.g. aws.amazon.com or infosys.com"
+                        value={issuerWebsite}
+                        onChange={(e) => setIssuerWebsite(e.target.value)}
+                        disabled={loading}
+                        className="cc-sub-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="cc-optional-field">
+                    <label htmlFor="cc-cert-number" className="cc-sub-label">
+                      Certificate / Roll / ID Number
+                    </label>
+                    <div className="cc-field-inner">
+                      <Hash className="w-4 h-4 text-[#94A098] shrink-0" />
+                      <input 
+                        id="cc-cert-number"
+                        type="text"
+                        placeholder="e.g. INFY-INT-2026-88421"
+                        value={certificateNumber}
+                        onChange={(e) => setCertificateNumber(e.target.value)}
+                        disabled={loading}
+                        className="cc-sub-input"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* SECTION D: CANDIDATE CONSENT */}
+          <div className="cc-consent-card">
+            <label className="cc-consent-label">
+              <input 
+                type="checkbox"
+                checked={candidateConsent}
+                onChange={(e) => setCandidateConsent(e.target.checked)}
+                disabled={loading}
+                className="cc-consent-checkbox"
+              />
+              <div className="cc-consent-text">
+                <span className="cc-consent-title">
+                  Candidate Consent for Statutory & Institutional Verification
+                </span>
+                <span className="cc-consent-desc">
+                  I confirm that candidate authorization has been obtained for verifying academic or statutory records through DigiLocker NAD and official registrar channels in accordance with the Information Technology Act (2000) and the Digital Personal Data Protection Act (DPDP).
+                </span>
+              </div>
+            </label>
+          </div>
+
+          {/* Error Banners */}
+          {(fileError || error) && (
+            <div className="cc-error-banner fadeIn" role="alert">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{fileError || error}</span>
             </div>
           )}
-        </div>
 
-        {/* SECTION 4: CANDIDATE CONSENT CONFIRMATION */}
-        <div className="p-3.5 bg-[#FDFDFB] border border-[#DCE8DF] rounded-xl">
-          <label className="flex items-start gap-3 cursor-pointer text-xs text-[#202923]">
-            <input 
-              type="checkbox"
-              checked={candidateConsent}
-              onChange={(e) => setCandidateConsent(e.target.checked)}
-              className="mt-0.5 rounded text-[#174C3C] focus:ring-[#174C3C]"
-            />
-            <div>
-              <span className="font-bold text-[#202923] block">
-                Candidate Consent for Statutory & Institutional Verification
-              </span>
-              <span className="text-[#526056] text-[11px] block leading-relaxed mt-0.5">
-                I confirm that candidate authorization has been obtained for verifying academic or statutory records through DigiLocker NAD and official registrar channels in accordance with the IT Act (2000) and Digital Personal Data Protection Act (DPDP).
-              </span>
-            </div>
-          </label>
-        </div>
+          {/* SECTION E: PRIMARY SUBMISSION ACTION */}
+          <div className="cc-submit-action-wrap">
+            <button
+              type="submit"
+              disabled={loading || !selectedFile}
+              className="cc-primary-submit-btn"
+            >
+              {loading ? (
+                <>
+                  <VerifyMeLoader size="sm" variant="white" label="Analyzing document..." />
+                  <span>Analyzing Document...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4 text-[#C7D99A]" />
+                  <span>Analyse Document</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
 
-        {/* SUBMIT ACTION BUTTON */}
-        <div>
-          <button
-            type="submit"
-            disabled={loading || !selectedFile}
-            className="cc-btn-execute"
-          >
-            <ShieldCheck className="w-5 h-5 text-[#C7D99A]" />
-            <span>Begin Forensic & Statutory Investigation</span>
-          </button>
-        </div>
-      </form>
+      {/* 3. Subtle Footer Note */}
+      <div className="cc-intake-footer-note">
+        <ShieldCheck className="w-4 h-4 text-[#737D76]" />
+        <span>Document integrity is audited using SHA-256 hash validation, optical QR analysis, and statutory registries without altering source bytes.</span>
+      </div>
     </div>
   );
 };

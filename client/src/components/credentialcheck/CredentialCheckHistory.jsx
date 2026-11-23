@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { 
-  History, 
   Search, 
   Trash2, 
-  ExternalLink, 
-  FileText, 
-  Calendar, 
+  ArrowRight, 
   ShieldCheck, 
-  ShieldAlert, 
   AlertTriangle, 
   HelpCircle,
-  Eye,
-  Loader2
+  FolderOpen,
+  PlusCircle,
+  Hash,
+  Award
 } from 'lucide-react';
+import './CredentialCheck.css';
 
-const CredentialCheckHistory = ({ 
+export const CredentialCheckHistory = ({ 
   history = [], 
   onSelectInvestigation, 
   onDeleteInvestigation,
-  loading = false 
+  loading = false,
+  onStartNew
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -32,8 +32,34 @@ const CredentialCheckHistory = ({
         day: 'numeric'
       });
     } catch {
-      return iso;
+      return 'Recent';
     }
+  };
+
+  const formatCategoryName = (cat) => {
+    const map = {
+      AUTO: 'Auto-detected',
+      INTERNSHIP: 'Internship',
+      COURSE_COMPLETION: 'Course',
+      TRAINING: 'Training',
+      EXPERIENCE: 'Experience',
+      ACADEMIC: 'Academic',
+      PROFESSIONAL_CERTIFICATION: 'Certification'
+    };
+    return map[cat] || cat?.replace(/_/g, ' ') || 'Document';
+  };
+
+  const getOutcomeTag = (outcome) => {
+    if (outcome === 'VERIFIED') {
+      return { class: 'verified', label: 'VERIFIED', icon: ShieldCheck };
+    }
+    if (outcome === 'PARTIALLY_VERIFIED') {
+      return { class: 'likely', label: 'PARTIAL', icon: ShieldCheck };
+    }
+    if (outcome === 'SUSPICIOUS') {
+      return { class: 'suspicious', label: 'SUSPICIOUS', icon: AlertTriangle };
+    }
+    return { class: 'insufficient', label: 'INSUFFICIENT', icon: HelpCircle };
   };
 
   const filtered = history.filter(item => {
@@ -50,7 +76,7 @@ const CredentialCheckHistory = ({
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this investigation record?')) return;
+    if (!window.confirm('Are you sure you want to remove this investigation record?')) return;
     setDeletingId(id);
     try {
       await onDeleteInvestigation(id);
@@ -60,145 +86,163 @@ const CredentialCheckHistory = ({
   };
 
   return (
-    <div className="cc-card">
-      <div className="cc-card-header">
-        <div>
-          <h2 className="cc-card-title">
-            <History className="w-5 h-5 text-slate-800" />
-            <span>Credential Investigation History</span>
-          </h2>
-          <p className="cc-card-desc">Audit activity record of analyzed certificates and credentials.</p>
-        </div>
-        <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">
-          {history.length} Total Cases
-        </span>
+    <div className="cc-history-root fadeIn">
+      {/* Header */}
+      <div className="cc-intake-header">
+        <h1 className="cc-intake-title">Investigation Records</h1>
+        <p className="cc-intake-subtitle">
+          Review, export, and cross-reference previously analyzed credentials, academic records, and investigation dossiers.
+        </p>
       </div>
 
-      {/* Controls */}
-      <div className="cc-history-controls">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search by candidate, issuer, file..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="cc-search-input pl-8"
-          />
-          <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" />
+      <div className="cc-history-container">
+        {/* Controls Card: Search & Filter Pills */}
+        <div className="cc-history-controls-card">
+          <div className="cc-search-input-wrap">
+            <Search className="cc-search-icon w-4 h-4 text-[#94A098]" />
+            <input
+              type="text"
+              className="cc-history-search-input"
+              placeholder="Search by case ID, candidate, issuer, or file..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="cc-history-filter-pills font-mono" role="tablist">
+            {[
+              { id: 'ALL', label: `ALL (${history.length})` },
+              { id: 'ACADEMIC', label: 'ACADEMIC' },
+              { id: 'INTERNSHIP', label: 'INTERNSHIP' },
+              { id: 'COURSE_COMPLETION', label: 'COURSE' },
+              { id: 'EXPERIENCE', label: 'EXPERIENCE' }
+            ].map(pill => (
+              <button
+                key={pill.id}
+                type="button"
+                role="tab"
+                aria-selected={selectedCategory === pill.id}
+                className={`cc-filter-pill ${selectedCategory === pill.id ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(pill.id)}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {['ALL', 'ACADEMIC', 'INTERNSHIP', 'COURSE_COMPLETION', 'EXPERIENCE'].map(cat => (
-            <button
-              key={cat}
-              type="button"
-              className={`text-xs px-2.5 py-1 rounded-md font-bold border transition-colors ${selectedCategory === cat ? 'bg-[#174C3C] text-white border-[#0F3328]' : 'bg-[#FDFDFB] text-[#526056] border-[#DCE8DF] hover:bg-[#F6F5EF]'}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat.replace(/_/g, ' ')}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Case Management Table */}
-      <div className="cc-table-wrapper">
-        <table className="cc-table">
-          <thead>
-            <tr>
-              <th style={{ width: '22%' }}>Case / File Name</th>
-              <th style={{ width: '18%' }}>Candidate / Holder</th>
-              <th style={{ width: '22%' }}>Issuing Organization</th>
-              <th style={{ width: '14%' }}>Category</th>
-              <th style={{ width: '12%' }}>Status</th>
-              <th style={{ width: '12%' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-slate-500">
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Loading investigation history...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-slate-400 italic">
-                  No investigation cases located matching your filter.
-                </td>
-              </tr>
-            ) : (
-              filtered.map(item => {
-                const holder = item.extractedFields?.holderName?.value || 'Unstated';
-                const issuer = item.extractedFields?.issuingOrganization?.value || item.issuerIdentity?.queryOrg || 'Unstated';
-                const isDel = deletingId === item.id;
-
-                let badgeClass = 'unverified';
-                if (item.outcome === 'VERIFIED') badgeClass = 'exact';
-                else if (item.outcome === 'PARTIALLY_VERIFIED') badgeClass = 'partial';
-                else if (item.outcome === 'SUSPICIOUS') badgeClass = 'mismatch';
-
-                return (
-                  <tr 
-                    key={item.id} 
-                    className="cursor-pointer hover:bg-slate-50"
-                    onClick={() => onSelectInvestigation(item)}
-                  >
-                    <td>
-                      <span className="font-semibold text-slate-900 block truncate max-w-[200px]">
-                        {item.fileName || 'Uploaded Document'}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
-                        ID: {item.id} • {formatDate(item.createdAt || item.createdAtIso)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="font-medium text-slate-800">{holder}</span>
-                    </td>
-                    <td>
-                      <span className="text-slate-800">{issuer}</span>
-                    </td>
-                    <td>
-                      <span className="text-[11px] font-bold text-slate-500 uppercase">
-                        {(item.category || '').replace(/_/g, ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`cc-match-badge ${badgeClass}`}>
-                        {(item.outcome || 'INSUFFICIENT').replace(/_/g, ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="cc-action-btn-sm"
-                          onClick={() => onSelectInvestigation(item)}
-                          title="Open Case File"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="cc-action-btn-sm cc-action-btn-danger"
-                          onClick={(e) => handleDelete(e, item.id)}
-                          disabled={isDel}
-                          title="Delete Case Record"
-                        >
-                          {isDel ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+        {/* History Table / Records List */}
+        {loading ? (
+          <div className="cc-history-loading">
+            <div className="cc-loading-pulse-dot" />
+            <span className="font-mono text-xs text-[#737D76]">Retrieving credential records...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="cc-history-empty">
+            <div className="cc-empty-icon-wrap">
+              <FolderOpen className="w-6 h-6 text-[#49B99A]" />
+            </div>
+            <h3 className="cc-empty-title">No investigation records found</h3>
+            <p className="cc-empty-desc">
+              {searchTerm || selectedCategory !== 'ALL' 
+                ? 'Try adjusting your search criteria or resetting filters.' 
+                : 'You have not submitted any credentials or certificates for investigation yet.'}
+            </p>
+            {onStartNew && (
+              <button 
+                type="button" 
+                onClick={onStartNew}
+                className="cc-empty-cta-btn"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Start New Investigation</span>
+              </button>
             )}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <div className="cc-table-wrapper">
+            <table className="cc-history-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '16%' }}>Case Reference</th>
+                  <th style={{ width: '34%' }}>Credential / Issuer</th>
+                  <th style={{ width: '14%' }}>Category</th>
+                  <th style={{ width: '16%' }}>Assessment</th>
+                  <th style={{ width: '10%' }}>Date</th>
+                  <th style={{ width: '10%', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item) => {
+                  const tag = getOutcomeTag(item.outcome);
+                  const TagIcon = tag.icon;
+                  const candidate = item.extractedFields?.holderName?.value || null;
+                  const issuer = item.extractedFields?.issuingOrganization?.value || item.fileName || 'Unspecified Issuer';
+
+                  return (
+                    <tr 
+                      key={item.id}
+                      onClick={() => onSelectInvestigation(item)}
+                      className="cc-table-row-clickable"
+                    >
+                      <td>
+                        <span className="cc-case-id-tag font-mono">
+                          <Hash className="w-3 h-3 inline text-[#94A098] mr-0.5" />
+                          {item.id ? item.id.slice(0, 10) : 'CRED-CASE'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="cc-cell-title">
+                          {candidate ? `${candidate}` : issuer}
+                        </div>
+                        <div className="cc-cell-subtitle">
+                          {candidate ? `${issuer} • ${item.fileName}` : item.fileName}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="cc-format-pill font-mono">
+                          <Award className="w-3.5 h-3.5 text-[#737D76]" />
+                          <span>{formatCategoryName(item.category)}</span>
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`cc-outcome-badge ${tag.class} font-mono`}>
+                          <TagIcon className="w-3 h-3 shrink-0" />
+                          <span>{tag.label}</span>
+                        </span>
+                      </td>
+                      <td className="cc-date-cell font-mono">
+                        {formatDate(item.createdAt || item.createdAtIso)}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => onSelectInvestigation(item)}
+                            className="cc-review-link"
+                            title="Open Investigation Dossier"
+                          >
+                            <span>Review</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDelete(e, item.id)}
+                            disabled={deletingId === item.id}
+                            className="cc-delete-btn"
+                            title="Delete record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

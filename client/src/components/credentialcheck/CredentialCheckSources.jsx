@@ -1,16 +1,17 @@
 import React from 'react';
-import { Layers, ExternalLink, ShieldCheck, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import './CredentialCheck.css';
 
-const CredentialCheckSources = () => {
+export const CredentialCheckSources = () => {
   const sources = [
     {
       name: 'National Academic Depository (NAD / DigiLocker)',
       statutoryRole: 'Government of India Academic Depository',
       url: 'https://nad.digilocker.gov.in/',
-      description: 'Official national online storehouse of academic awards (degrees, diplomas, certificates, marksheets) duly digitized and lodged by academic institutions / boards / eligibility assessment bodies.',
+      description: 'Official national online storehouse of academic awards (degrees, diplomas, certificates, marksheets) duly digitized and lodged by academic institutions, boards, and eligibility assessment bodies.',
       integrationType: 'Consent-Based Authorized Partner Connector',
       status: 'AVAILABLE VIA CANDIDATE CONSENT ROUTE',
-      notes: 'Requires individual student consent in accordance with the IT Act and DPDP Act. We never scrape DigiLocker.'
+      notes: 'Requires individual student consent in accordance with the IT Act (2000) and DPDP Act. We never scrape DigiLocker.'
     },
     {
       name: 'University Grants Commission (UGC) Statutory Registry',
@@ -25,7 +26,7 @@ const CredentialCheckSources = () => {
       name: 'Ministry of Corporate Affairs (MCA21)',
       statutoryRole: 'Corporate & Company Registrar',
       url: 'https://www.mcacdm.nic.in/company-master-details',
-      description: 'Authoritative company master data, CIN status, incorporation dates, and registered office records under the Companies Act.',
+      description: 'Authoritative company master data, Corporate Identification Number (CIN) status, incorporation dates, and registered office records under the Companies Act.',
       integrationType: 'Enterprise Master Registry with Manual Portal Fallback',
       status: 'ACTIVE ENTERPRISE SNAPSHOT & MANUAL ROUTE',
       notes: 'Public MCA lookup is protected by CAPTCHAs. Direct scraping is disabled by project security policy; manual lookup URLs are generated for unindexed corporate entities.'
@@ -60,55 +61,59 @@ const CredentialCheckSources = () => {
   ];
 
   return (
-    <div className="cc-card">
-      <div className="cc-card-header">
-        <div>
-          <h2 className="cc-card-title">
-            <Layers className="w-5 h-5 text-slate-800" />
-            <span>Official & Statutory Verification Sources</span>
-          </h2>
-          <p className="cc-card-desc">
-            India-First directory of authoritative registries, cryptographic frameworks, and official verification routes.
+    <div className="cc-methodology-root fadeIn">
+      <div className="cc-methodology-header-block">
+        <div className="cc-methodology-header-content">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="cc-case-badge font-mono">SPECIFICATION // DIRECTORIES</span>
+            <span className="cc-meta-dot">•</span>
+            <span className="font-mono text-xs text-[#737D76]">AUTHORITATIVE REGISTRIES</span>
+          </div>
+          <h1 className="cc-methodology-page-title">Official & Statutory Verification Sources</h1>
+          <p className="cc-methodology-desc">
+            VerifyMe cross-references credentials with authoritative public gazettes, statutory registries, cryptographic root authorities, and authorized student depository gateways.
           </p>
         </div>
-        <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">
-          6 Integrated Adapters
-        </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="cc-sources-detailed-grid">
         {sources.map((src, idx) => (
-          <div key={`source-${idx}`} className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#174C3C]">{src.statutoryRole}</span>
-                <span className="text-[10px] font-mono font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                  {src.status}
-                </span>
+          <div key={idx} className="cc-source-detailed-card">
+            <div className="cc-source-card-top">
+              <div>
+                <span className="cc-source-role-badge font-mono">{src.statutoryRole}</span>
+                <h3 className="cc-source-card-title">{src.name}</h3>
               </div>
-              <h3 className="text-sm font-bold text-slate-900 mb-1">{src.name}</h3>
-              <p className="text-xs text-slate-600 leading-relaxed mb-2">{src.description}</p>
-              
-              <div className="text-[11px] text-slate-500 bg-white p-2.5 rounded border border-slate-200">
-                <strong className="text-slate-700 block mb-0.5">Integration Architecture:</strong>
-                <span>{src.integrationType}</span>
-                <span className="block mt-1 text-slate-400 italic">{src.notes}</span>
-              </div>
-            </div>
-
-            {src.url && (
-              <div className="pt-2 border-t border-slate-200">
+              {src.url && (
                 <a 
                   href={src.url} 
                   target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-xs text-[#174C3C] hover:underline inline-flex items-center gap-1 font-bold"
+                  rel="noreferrer" 
+                  className="cc-source-link-btn"
+                  title="Visit official portal"
                 >
-                  <span>Visit Statutory Portal</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
+              )}
+            </div>
+
+            <p className="cc-source-desc">{src.description}</p>
+
+            <div className="cc-source-meta-rows font-mono">
+              <div className="cc-meta-row">
+                <span className="cc-meta-k">INTEGRATION:</span>
+                <span className="cc-meta-v">{src.integrationType}</span>
               </div>
-            )}
+              <div className="cc-meta-row">
+                <span className="cc-meta-k">OPERATIONAL STATUS:</span>
+                <span className="cc-meta-v text-[#2E7D5B] font-bold">{src.status}</span>
+              </div>
+            </div>
+
+            <div className="cc-source-notes">
+              <span className="cc-notes-lbl font-mono">OPERATIONAL BOUNDARY:</span>
+              <p className="cc-notes-p">{src.notes}</p>
+            </div>
           </div>
         ))}
       </div>

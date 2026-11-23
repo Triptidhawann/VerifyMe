@@ -1,20 +1,18 @@
 import React from 'react';
 import DashboardNav from '../components/dashboard/DashboardNav';
 import ExpandedHistory from '../components/dashboard/ExpandedHistory';
-import { useAuth } from '../context/AuthContext';
-import './Dashboard.css'; // Reusing dashboard layout
+import './Dashboard.css';
 
 const HistoryPage = () => {
-  const { user } = useAuth();
 
   return (
-    <div className="dashboard-container">
+    <div className="dash-root-container">
       <DashboardNav />
       
-      <main className="workspace container">
-        <div className="workspace-hero">
-          <h1 className="hero-title">Intelligence History</h1>
-          <p className="hero-subtitle">Review and analyze your past investigations.</p>
+      <main className="dash-main-viewport">
+        <div className="dash-hero-banner" style={{ textAlign: 'left', margin: '0 0 2rem 0' }}>
+          <h1 className="dash-hero-title">Verification History</h1>
+          <p className="dash-hero-description">Review and inspect your past verification audits.</p>
         </div>
 
         <ExpandedHistory />

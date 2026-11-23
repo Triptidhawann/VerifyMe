@@ -38,7 +38,7 @@ const ProfilePage = () => {
           name: name,
           updatedAt: serverTimestamp()
         });
-      } catch (docErr) {
+      } catch (_docErr) {
         // If document doesn't exist yet, lazily create it
         await setDoc(userRef, {
           uid: user.uid,
@@ -60,13 +60,13 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dash-root-container">
       <DashboardNav />
       
-      <main className="workspace container profile-workspace">
-        <div className="workspace-header">
-          <h1>Account Settings</h1>
-          <p>Manage your identity and security preferences.</p>
+      <main className="dash-main-viewport profile-workspace">
+        <div className="dash-hero-banner" style={{ textAlign: 'left', margin: '0 0 2rem 0' }}>
+          <h1 className="dash-hero-title">My Account</h1>
+          <p className="dash-hero-description">Manage your identity and security preferences.</p>
         </div>
 
         <div className="settings-grid">
