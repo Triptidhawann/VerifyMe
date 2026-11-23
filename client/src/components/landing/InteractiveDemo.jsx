@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Check, AlertTriangle, AlertCircle, ChevronDown, ArrowRight } from 'lucide-react';
 
 const demoData = {
   phone: {
@@ -12,14 +13,14 @@ const demoData = {
     evidence: 3,
     warnings: 2,
     positive: [
-      { text: "Valid carrier assigned", icon: "check" },
-      { text: "Line type is mobile", icon: "check" }
+      { text: "Valid carrier assigned (AT&T Mobility)", icon: "check" },
+      { text: "Line type validated as mobile", icon: "check" }
     ],
     review: [
-      { text: "Recent porting activity detected", icon: "alert" },
-      { text: "No linked public records found", icon: "alert" }
+      { text: "Recent porting activity detected within 14 days", icon: "alert" },
+      { text: "No linked commercial directory records found", icon: "alert" }
     ],
-    recommendation: "Exercise caution. Verify identity via secondary channel."
+    recommendation: "Exercise caution. Verify identity via secondary out-of-band channel."
   },
   email: {
     label: "Email Address",
@@ -31,46 +32,86 @@ const demoData = {
     evidence: 4,
     warnings: 1,
     positive: [
-      { text: "Domain is registered and active", icon: "check" },
-      { text: "Valid MX records configured", icon: "check" },
-      { text: "Not found in recent breaches", icon: "check" }
+      { text: "Domain is registered, active, and established", icon: "check" },
+      { text: "Valid cryptographic MX, SPF & DKIM configured", icon: "check" },
+      { text: "Not found in recent credential exposure databases", icon: "check" }
     ],
     review: [
-      { text: "Domain age is under 1 year", icon: "alert" }
+      { text: "Domain registration age is under 1 year", icon: "alert" }
     ],
-    recommendation: "Proceed with normal caution."
+    recommendation: "Proceed with normal protocol caution."
   },
   website: {
     label: "Website URL",
-    value: "https://example-demo.com",
-    score: 18,
-    risk: "HIGH RISK",
+    value: "https://paypaI-login-secure.xyz",
+    score: 14,
+    risk: "CRITICAL RISK",
     riskClass: "danger",
     signals: 8,
     evidence: 5,
     warnings: 4,
     positive: [
-      { text: "HTTPS configured", icon: "check" }
+      { text: "Basic TLS/HTTPS encryption certificate active", icon: "check" }
     ],
     review: [
-      { text: "Domain registered in the last 7 days", icon: "danger" },
-      { text: "Hidden WHOIS registration", icon: "danger" },
-      { text: "Associated with known phishing IP block", icon: "danger" }
+      { text: "Cyrillic homoglyph spoofing detected in domain string", icon: "danger" },
+      { text: "Domain registered 4 days ago with anonymized WHOIS", icon: "danger" },
+      { text: "Hosted on IP block flagged for credential harvesting", icon: "danger" }
     ],
-    recommendation: "Block immediately. Do not interact."
+    recommendation: "Block immediately. Do not submit credentials or tokens."
+  },
+  jobshield: {
+    label: "Job Offer / Recruiter",
+    value: "Remote Data Operations Specialist @ GlobalTech Corp",
+    score: 22,
+    risk: "HIGH RISK SCAM",
+    riskClass: "danger",
+    signals: 9,
+    evidence: 6,
+    warnings: 5,
+    positive: [
+      { text: "Brand name matches genuine Fortune 500 company", icon: "check" }
+    ],
+    review: [
+      { text: "Recruiter domain registered 8 days ago (lookalike domain spoof)", icon: "danger" },
+      { text: "Official ATS careers system has zero matching requisition ID", icon: "danger" },
+      { text: "Unsolicited interview conducted exclusively via anonymous chat", icon: "danger" },
+      { text: "Equipment advance fee / fake check deposit workflow detected", icon: "danger" }
+    ],
+    recommendation: "High-confidence employment fraud. Cease communication and report."
+  },
+  credential: {
+    label: "Credential / Marksheet",
+    value: "B.Sc Computer Science — Metro State University",
+    score: 96,
+    risk: "VERIFIED AUTHENTIC",
+    riskClass: "success",
+    signals: 11,
+    evidence: 7,
+    warnings: 0,
+    positive: [
+      { text: "PKCS#7 cryptographic digital signature verified (SHA-256)", icon: "check" },
+      { text: "Statutory Higher Education Registry database matched", icon: "check" },
+      { text: "Arithmetic mark calculations and CGPA 100% mathematically consistent", icon: "check" },
+      { text: "Tamper-evident QR certificate verified against registrar key", icon: "check" }
+    ],
+    review: [
+      { text: "Document structure conforms to official university master template", icon: "check" }
+    ],
+    recommendation: "Document integrity confirmed. Cryptographically authoritative credential."
   }
 };
 
 const stages = [
-  "INPUT RECEIVED\nEntity captured",
-  "COLLECTING SIGNALS\nGathering available evidence",
-  "CORRELATING EVIDENCE\nComparing related signals",
-  "ASSESSING RISK\nEvaluating trust indicators",
-  "ASSESSMENT READY\nGenerating explainable report"
+  "INPUT RECEIVED\nEntity captured into pipeline",
+  "COLLECTING SIGNALS\nGathering carrier, DNS & statutory sources",
+  "CORRELATING EVIDENCE\nAnalyzing protocol invariance & signatures",
+  "ASSESSING RISK\nEvaluating deterministic trust indicators",
+  "EVIDENCE LEDGER READY\nSynthesizing explainable investigation"
 ];
 
 const InteractiveDemo = () => {
-  const [activeTab, setActiveTab] = useState('email');
+  const [activeTab, setActiveTab] = useState('jobshield');
   const [analysisState, setAnalysisState] = useState('idle'); // idle, analyzing, result
   const [analysisStage, setAnalysisStage] = useState(0);
   const [showWhy, setShowWhy] = useState(false);
@@ -114,9 +155,10 @@ const InteractiveDemo = () => {
   };
 
   const renderIcon = (type) => {
-    if (type === 'check') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success-color)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
-    if (type === 'alert') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
-    if (type === 'danger') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color, #EF4444)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>;
+    if (type === 'check') return <Check className="w-3.5 h-3.5 text-[#2E7D5B] shrink-0 mt-0.5" strokeWidth={3} />;
+    if (type === 'alert') return <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />;
+    if (type === 'danger') return <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />;
+    return null;
   };
 
   return (
@@ -127,13 +169,15 @@ const InteractiveDemo = () => {
         {/* COLUMN 1: INPUT */}
         <div className="demo-panel input-panel">
           <div className="demo-header">
-            <span className="demo-badge">Interactive Demo</span>
+            <span className="demo-badge">Live Interactive Simulator</span>
           </div>
           
-          <div className="demo-tabs">
-            <button className={`demo-tab ${activeTab === 'phone' ? 'active' : ''}`} onClick={() => handleTabChange('phone')} disabled={analysisState === 'analyzing'}>Phone</button>
+          <div className="demo-tabs flex-wrap">
+            <button className={`demo-tab ${activeTab === 'jobshield' ? 'active' : ''}`} onClick={() => handleTabChange('jobshield')} disabled={analysisState === 'analyzing'}>Job Offer</button>
+            <button className={`demo-tab ${activeTab === 'credential' ? 'active' : ''}`} onClick={() => handleTabChange('credential')} disabled={analysisState === 'analyzing'}>Credential</button>
             <button className={`demo-tab ${activeTab === 'email' ? 'active' : ''}`} onClick={() => handleTabChange('email')} disabled={analysisState === 'analyzing'}>Email</button>
             <button className={`demo-tab ${activeTab === 'website' ? 'active' : ''}`} onClick={() => handleTabChange('website')} disabled={analysisState === 'analyzing'}>Website</button>
+            <button className={`demo-tab ${activeTab === 'phone' ? 'active' : ''}`} onClick={() => handleTabChange('phone')} disabled={analysisState === 'analyzing'}>Phone</button>
           </div>
           
           <div className="demo-input-group">
@@ -146,7 +190,7 @@ const InteractiveDemo = () => {
             onClick={handleAnalyze}
             disabled={analysisState !== 'idle'}
           >
-            {analysisState === 'analyzing' ? 'Analyzing...' : 'Analyze'}
+            {analysisState === 'analyzing' ? 'Synthesizing...' : 'Run Simulation'}
           </button>
         </div>
 
@@ -171,21 +215,21 @@ const InteractiveDemo = () => {
           </div>
           
           <div className="engine-status-text">
-            {analysisState === 'idle' && <div className="stage-text"><strong>AWAITING INPUT</strong><span>Select entity and analyze</span></div>}
+            {analysisState === 'idle' && <div className="stage-text"><strong>AWAITING INPUT</strong><span>Select vector and run simulation</span></div>}
             {analysisState === 'analyzing' && (
               <div className="stage-text animate-fade-in" key={analysisStage}>
                 <strong>{stages[analysisStage].split('\n')[0]}</strong>
                 <span>{stages[analysisStage].split('\n')[1]}</span>
               </div>
             )}
-            {analysisState === 'result' && <div className="stage-text"><strong>ANALYSIS COMPLETE</strong><span>Result generated</span></div>}
+            {analysisState === 'result' && <div className="stage-text"><strong>ANALYSIS COMPLETE</strong><span>Evidence Ledger generated</span></div>}
           </div>
         </div>
 
         {/* COLUMN 3: RESULT */}
         <div className={`demo-panel result-panel ${analysisState === 'result' ? 'visible' : 'hidden'}`}>
           <div className="result-header">
-            <h4>VERIFICATION RESULT</h4>
+            <h4>EVIDENCE LEDGER REPORT</h4>
             <span className="result-entity">{currentData.value}</span>
           </div>
           
@@ -204,7 +248,7 @@ const InteractiveDemo = () => {
           <div className="result-explainable">
             <button className="btn-expand" onClick={() => setShowWhy(!showWhy)}>
               Why this result? 
-              <svg className={showWhy ? 'rotated' : ''} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showWhy ? 'rotate-180' : ''}`} />
             </button>
             
             <div className={`expandable-content ${showWhy ? 'open' : ''}`}>
@@ -218,7 +262,7 @@ const InteractiveDemo = () => {
                 ))}
               </div>
               <div className="evidence-group">
-                <h5>REVIEW SIGNALS</h5>
+                <h5>INVESTIGATION FINDINGS</h5>
                 {currentData.review.map((item, i) => (
                   <div key={`rev-${i}`} className="evidence-item">
                     {renderIcon(item.icon)}
@@ -234,13 +278,16 @@ const InteractiveDemo = () => {
             <p>{currentData.recommendation}</p>
           </div>
           
-          <button className="btn-reset" onClick={handleReset}>Run another analysis</button>
+          <button className="btn-reset" onClick={handleReset}>Run another simulation</button>
         </div>
       </div>
       
       <div className="demo-curious-cta">
-        <p>Have something you don't fully trust?</p>
-        <Link to="/signup" className="btn">Run a real verification →</Link>
+        <p>Have an unknown contact, job offer, or document you don't fully trust?</p>
+        <Link to="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#49B99A] hover:bg-[#3ea88b] text-white font-semibold text-sm transition-all shadow-md shadow-[#49B99A]/20 hover:-translate-y-0.5">
+          <span>Run a real verification</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
       </div>
     </div>
   );

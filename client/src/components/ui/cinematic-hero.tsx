@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import { 
   ShieldCheck, 
   Zap, 
-  CheckCircle2, 
   Lock, 
-  Sparkles,
   ArrowRight,
-  Activity
+  Activity,
+  Briefcase,
+  FileCheck2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -25,76 +25,67 @@ const INJECTED_STYLES = `
   /* Environment Overlays */
   .film-grain {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 50; opacity: 0.05; mix-blend-mode: overlay;
+      pointer-events: none; z-index: 50; opacity: 0.02; mix-blend-mode: multiply;
       background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
   }
 
   .bg-grid-theme {
       background-size: 60px 60px;
       background-image: 
-          linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+          linear-gradient(to right, rgba(73, 185, 154, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(73, 185, 154, 0.08) 1px, transparent 1px);
       mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
       -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
   }
 
-  /* Physical Skeuomorphic Materials */
+  /* Physical Materials - Fresh Mint + White */
   .text-3d-matte {
-      color: #F8FAFC;
-      text-shadow: 
-          0 10px 30px rgba(0, 0, 0, 0.8), 
-          0 2px 4px rgba(0, 0, 0, 0.5);
+      color: #202923;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   }
 
   .text-silver-matte {
-      background: linear-gradient(180deg, #FFFFFF 0%, #94A3B8 100%);
+      background: linear-gradient(180deg, #202923 0%, #2E7D5B 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       transform: translateZ(0);
-      filter: 
-          drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.7)) 
-          drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
   }
 
   .text-card-silver-matte {
-      background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 100%);
+      background: linear-gradient(180deg, #202923 0%, #556058 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       transform: translateZ(0);
-      filter: 
-          drop-shadow(0px 12px 24px rgba(0,0,0,0.8)) 
-          drop-shadow(0px 4px 8px rgba(0,0,0,0.6));
   }
 
-  /* Deep Physical Card with Dynamic Mouse Lighting */
+  /* Physical Card with Fresh Mint Theme */
   .premium-depth-card {
-      background: linear-gradient(145deg, #0F172A 0%, #030712 100%);
+      background: linear-gradient(145deg, #FFFFFF 0%, #F4F9F6 100%);
       box-shadow: 
-          0 40px 100px -20px rgba(0, 0, 0, 0.95),
-          0 20px 40px -20px rgba(0, 0, 0, 0.85),
-          inset 0 1px 2px rgba(255, 255, 255, 0.2),
-          inset 0 -2px 4px rgba(0, 0, 0, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+          0 30px 80px -20px rgba(0, 0, 0, 0.08),
+          0 10px 25px -10px rgba(73, 185, 154, 0.1),
+          inset 0 1px 2px rgba(255, 255, 255, 1),
+          inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+      border: 1px solid #E7EEE9;
       position: relative;
   }
 
   .card-sheen {
       position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 50;
-      background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99, 102, 241, 0.15) 0%, transparent 40%);
-      mix-blend-mode: screen; transition: opacity 0.3s ease;
+      background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(73, 185, 154, 0.12) 0%, transparent 40%);
+      mix-blend-mode: multiply; transition: opacity 0.3s ease;
   }
 
   .floating-ui-badge {
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.88) 100%);
-      backdrop-filter: blur(24px); 
-      -webkit-backdrop-filter: blur(24px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px);
       box-shadow: 
-          0 0 0 1px rgba(255, 255, 255, 0.14),
-          0 20px 40px -10px rgba(0, 0, 0, 0.85),
-          inset 0 1px 1px rgba(255, 255, 255, 0.25),
-          inset 0 -1px 1px rgba(0, 0, 0, 0.6);
+          0 0 0 1px #E7EEE9,
+          0 12px 30px -8px rgba(0, 0, 0, 0.08),
+          inset 0 1px 1px rgba(255, 255, 255, 1);
   }
 
   /* 3D Robot Image Integration */
@@ -110,26 +101,32 @@ const INJECTED_STYLES = `
   .ai-robot-wrapper::after {
       content: '';
       position: absolute;
-      width: 380px;
-      height: 380px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(16, 185, 129, 0.08) 35%, transparent 65%);
-      z-index: -1;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 440px;
+      height: 440px;
+      background: radial-gradient(circle, rgba(73, 185, 154, 0.22) 0%, rgba(239, 248, 243, 0.75) 42%, transparent 70%);
+      z-index: 0;
       border-radius: 50%;
-      filter: blur(45px);
+      filter: blur(36px);
+      pointer-events: none;
       animation: pulseCore 6s ease-in-out infinite;
   }
 
   @keyframes pulseCore {
-      0%, 100% { transform: scale(0.92); opacity: 0.6; }
-      50% { transform: scale(1.15); opacity: 0.9; }
+      0%, 100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.7; }
+      50% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.95; }
   }
 
   .ai-robot-image {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      filter: drop-shadow(0 25px 45px rgba(0, 0, 0, 0.85));
+      filter: drop-shadow(0 18px 28px rgba(32, 41, 35, 0.12)) drop-shadow(0 4px 12px rgba(73, 185, 154, 0.15));
       animation: floatRobot 6s ease-in-out infinite;
+      position: relative;
+      z-index: 5;
   }
 
   @keyframes floatRobot { 
@@ -140,57 +137,71 @@ const INJECTED_STYLES = `
       100% { transform: translateY(0) rotate(0deg); } 
   }
 
-  .robot-floor-shadow {
+  .robot-pedestal-ring {
       position: absolute;
-      bottom: 0%;
+      bottom: 8px;
       left: 50%;
       transform: translateX(-50%);
-      width: 220px;
-      height: 18px;
-      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, transparent 70%);
+      width: 250px;
+      height: 65px;
       border-radius: 50%;
-      filter: blur(12px);
+      background: radial-gradient(ellipse at center, rgba(73, 185, 154, 0.14) 0%, rgba(239, 248, 243, 0.05) 50%, transparent 75%);
+      border: 1.5px solid rgba(73, 185, 154, 0.35);
+      box-shadow: 0 0 20px rgba(73, 185, 154, 0.22);
+      pointer-events: none;
+      z-index: 1;
+  }
+
+  .robot-floor-shadow {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 210px;
+      height: 20px;
+      background: radial-gradient(ellipse at center, rgba(32, 41, 35, 0.18) 0%, rgba(73, 185, 154, 0.06) 45%, transparent 75%);
+      border-radius: 50%;
+      filter: blur(8px);
       animation: shadowPulse 6s ease-in-out infinite;
-      z-index: 0;
+      z-index: 2;
+      pointer-events: none;
   }
 
   @keyframes shadowPulse {
       0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
-      50% { transform: translateX(-50%) scale(0.75); opacity: 0.4; }
+      50% { transform: translateX(-50%) scale(0.72); opacity: 0.38; }
   }
 
-  /* Physical Tactile Buttons */
+  /* Tactile Buttons - Fresh Mint & Charcoal */
   .btn-modern-light, .btn-modern-dark {
-      transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .btn-modern-light {
-      background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F0 100%);
-      color: #0F172A;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.1), 0 12px 24px -4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(0,0,0,0.06);
+      background: #49B99A;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(73, 185, 154, 0.3);
   }
   .btn-modern-light:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 6px 12px -2px rgba(0,0,0,0.15), 0 20px 32px -6px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+      background: #3AA385;
+      box-shadow: 0 6px 20px rgba(73, 185, 154, 0.4);
   }
   .btn-modern-light:active {
       transform: translateY(1px);
-      background: linear-gradient(180deg, #F1F5F9 0%, #CBD5E1 100%);
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1), inset 0 3px 6px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(0,0,0,0.02);
   }
   .btn-modern-dark {
-      background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
-      color: #FFFFFF;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.6), 0 12px 24px -4px rgba(0,0,0,0.9), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -3px 6px rgba(0,0,0,0.8);
+      background: #FFFFFF;
+      color: #202923;
+      border: 1px solid #DCE5DF;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   }
   .btn-modern-dark:hover {
-      transform: translateY(-3px);
-      background: linear-gradient(180deg, #334155 0%, #1E293B 100%);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 6px 12px -2px rgba(0,0,0,0.7), 0 20px 32px -6px rgba(0,0,0,1), inset 0 1px 1px rgba(255,255,255,0.2), inset 0 -3px 6px rgba(0,0,0,0.8);
+      transform: translateY(-2px);
+      background: #F4F7F4;
+      border-color: #CBD5CD;
   }
   .btn-modern-dark:active {
       transform: translateY(1px);
-      background: #0F172A;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.05), inset 0 3px 8px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(0,0,0,0.5);
   }
 `;
 
@@ -211,11 +222,11 @@ export function CinematicHero({
   tagline1 = "Verify before you trust,",
   tagline2 = "not after you compromise.",
   cardHeading = "Know Before You Trust.",
-  cardDescription = "Autonomous intelligence verifying unknown callers, senders, and links before you engage.",
+  cardDescription = "Autonomous intelligence verifying unknown callers, senders, links, job offers, and credentials before you engage.",
   metricValue = 98,
   metricLabel = "Trust Score Index",
-  ctaHeading = "Stop threats in their tracks.",
-  ctaDescription = "Deterministic signal verification and real-time threat scoring built for modern high-stakes communication.",
+  ctaHeading = "Stop fraud and deception in their tracks.",
+  ctaDescription = "Multi-entity signal inspection, live ATS job matching, and statutory document forensics built for high-stakes digital decisions.",
   className, 
   ...props 
 }: CinematicHeroProps) {
@@ -261,7 +272,7 @@ export function CinematicHero({
     };
   }, []);
 
-  // 2. Complex Cinematic Scroll Timeline
+  // 2. Complex Cinematic Scroll Timeline - Preserved Exactly
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
 
@@ -325,18 +336,18 @@ export function CinematicHero({
   return (
     <div
       ref={containerRef}
-      className={cn("relative w-screen h-screen overflow-hidden flex items-center justify-center bg-[#030712] text-white font-sans antialiased", className)}
+      className={cn("relative w-screen h-screen overflow-hidden flex items-center justify-center bg-[#FAFCFA] text-[#202923] font-sans antialiased", className)}
       style={{ perspective: "1500px" }}
       {...props}
     >
       <style dangerouslySetInnerHTML={{ __html: INJECTED_STYLES }} />
       <div className="film-grain" aria-hidden="true" />
-      <div className="bg-grid-theme absolute inset-0 z-0 pointer-events-none opacity-40" aria-hidden="true" />
+      <div className="bg-grid-theme absolute inset-0 z-0 pointer-events-none opacity-60" aria-hidden="true" />
 
       {/* BACKGROUND LAYER 1: Hero Texts */}
       <div className="hero-text-wrapper absolute z-10 flex flex-col items-center justify-center text-center w-screen px-4 will-change-transform transform-style-3d">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-4">
-          <Zap className="w-3.5 h-3.5" /> Next-Gen AI & Deterministic Trust Engine
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EFF8F3] border border-[#D2E8DB] text-[#2E7D5B] text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
+          <Zap className="w-3.5 h-3.5 text-[#49B99A]" /> Multi-Vector Digital Verification Platform
         </div>
         <h1 className="text-track gsap-reveal text-3d-matte text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-2">
           {tagline1}
@@ -348,35 +359,36 @@ export function CinematicHero({
 
       {/* BACKGROUND LAYER 2: Tactile CTA Buttons */}
       <div className="cta-wrapper absolute z-10 flex flex-col items-center justify-center text-center w-full max-w-4xl px-6 gsap-reveal pointer-events-auto will-change-transform">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-5 shadow-sm">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Ready for Production Verification</span>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#EFF8F3] border border-[#D2E8DB] text-[#2E7D5B] text-xs font-semibold uppercase tracking-wider mb-5 shadow-sm">
+          <ShieldCheck className="w-4 h-4 text-[#49B99A]" />
+          <span>Production-Grade Verification Intelligence</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-5 tracking-tight text-silver-matte max-w-3xl leading-tight">
+        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-5 tracking-tight text-[#202923] max-w-3xl leading-tight">
           {ctaHeading}
         </h2>
-        <p className="text-slate-300 text-sm sm:text-base md:text-lg mb-8 max-w-xl mx-auto font-normal leading-relaxed">
+        <p className="text-[#556058] text-sm sm:text-base md:text-lg mb-8 max-w-xl mx-auto font-normal leading-relaxed">
           {ctaDescription}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center justify-center w-full sm:w-auto">
           <Link
             to="/signup"
-            className="btn-modern-light inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-slate-950 text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px] shadow-lg shadow-black/30"
+            className="btn-modern-light inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px]"
           >
-            <ShieldCheck className="w-5 h-5 text-indigo-600 transition-transform group-hover:scale-110 flex-shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-white transition-transform group-hover:scale-110 flex-shrink-0" />
             <span>Launch Free Audit</span>
+            <ArrowRight className="w-4 h-4 text-white" />
           </Link>
           <Link
             to="/login"
-            className="btn-modern-dark inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-white text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px] border border-slate-700/80 shadow-lg shadow-black/40"
+            className="btn-modern-dark inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-xl group font-semibold text-sm sm:text-base tracking-normal whitespace-nowrap min-w-[200px]"
           >
-            <Lock className="w-4 h-4 text-slate-400 group-hover:text-white flex-shrink-0 transition-colors" />
+            <Lock className="w-4 h-4 text-[#737D76] group-hover:text-[#202923] flex-shrink-0 transition-colors" />
             <span>Sign In to Workspace</span>
           </Link>
         </div>
       </div>
 
-      {/* FOREGROUND LAYER: The Physical Deep Blue Card with Prominent 3D Robot in Center */}
+      {/* FOREGROUND LAYER: The Physical Mint & White Card with Prominent 3D Robot in Center */}
       <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none" style={{ perspective: "1500px" }}>
         <div
           ref={mainCardRef}
@@ -387,71 +399,68 @@ export function CinematicHero({
           {/* DYNAMIC RESPONSIVE 3-PART LAYOUT */}
           <div className="relative w-full h-full max-w-7xl mx-auto px-6 lg:px-12 flex flex-col justify-evenly lg:grid lg:grid-cols-12 items-center lg:gap-8 z-10 py-6 lg:py-0">
             
-            {/* 1. LEFT: MINIMAL PUNCHY HEADLINE & VALUE PROP (Desktop Col 1-3) */}
+            {/* 1. LEFT: MINIMAL PUNCHY HEADLINE & VALUE PROP */}
             <div className="card-left-text gsap-reveal order-3 lg:order-1 lg:col-span-3 flex flex-col justify-center text-center lg:text-left z-20 w-full">
-              <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-indigo-400 mb-2 block">
-                Autonomous Security
+              <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-[#2E7D5B] mb-2 block">
+                Full-Spectrum Verification
               </span>
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#202923] tracking-tight leading-tight mb-3">
                 Know Before<br />
                 <span className="text-silver-matte">You Trust.</span>
               </h3>
-              <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xs mx-auto lg:mx-0">
+              <p className="text-[#556058] text-xs sm:text-sm font-normal leading-relaxed max-w-xs mx-auto lg:mx-0">
                 {cardDescription}
               </p>
             </div>
 
-            {/* 2. CENTER: 3D AI ROBOT HERO (Prominently Sized, Commanding Center Stage) */}
+            {/* 2. CENTER: 3D AI ROBOT HERO */}
             <div className="mockup-scroll-wrapper order-2 lg:order-2 lg:col-span-6 relative w-full h-[420px] sm:h-[500px] lg:h-[600px] flex items-center justify-center z-10" style={{ perspective: "1200px" }}>
               <div className="relative w-full h-full flex items-center justify-center">
                 
-                {/* 3D Parallax Robot Wrapper (Larger dimensions to make robot prominent) */}
                 <div
                   ref={mockupRef}
                   className="relative w-[320px] sm:w-[420px] lg:w-[490px] h-[380px] sm:h-[480px] lg:h-[560px] flex items-center justify-center will-change-transform transform-style-3d select-none"
                 >
-                  {/* The 3D Robot Image & Floor Shadow */}
                   <div className="ai-robot-wrapper relative w-full h-full flex items-center justify-center">
+                    <div className="robot-pedestal-ring" aria-hidden="true" />
                     <img 
-                      src="/robot-assistant.jpg" 
-                      alt="VerifyMe Autonomous AI Robot Assistant" 
+                      src="/robot-assistant.png" 
+                      alt="VerifyMe Autonomous AI Assistant" 
                       className="ai-robot-image w-full h-full object-contain transform scale-110 sm:scale-115" 
                     />
-                    <div className="robot-floor-shadow"></div>
+                    <div className="robot-floor-shadow" aria-hidden="true" />
                   </div>
 
-                  {/* Clean Floating Badges Framing the Larger Robot */}
-                  
-                  {/* Badge 1: Top Left - AI Scam Shield */}
+                  {/* Badge 1: Top Left - JobShield */}
                   <div className="floating-badge absolute top-2 sm:top-6 -left-2 sm:left-1 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-400/40 shadow-inner">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <div className="w-8 h-8 rounded-xl bg-[#EFF8F3] flex items-center justify-center border border-[#D2E8DB]">
+                      <Briefcase className="w-4 h-4 text-[#2E7D5B]" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold tracking-tight leading-none">AI Scam Shield</p>
-                      <p className="text-emerald-300 text-[10px] font-semibold mt-0.5">Zero Threat Detected</p>
+                      <p className="text-[#202923] text-xs font-bold tracking-tight leading-none">JobShield Active</p>
+                      <p className="text-[#2E7D5B] text-[10px] font-semibold mt-0.5">Live ATS Requisition Match</p>
                     </div>
                   </div>
 
-                  {/* Badge 2: Middle Right - 0.18s Latency */}
+                  {/* Badge 2: Middle Right - CredentialCheck */}
                   <div className="floating-badge absolute top-1/2 -translate-y-1/2 -right-2 sm:right-1 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-400/40 shadow-inner">
-                      <Zap className="w-4 h-4 text-indigo-400" />
+                    <div className="w-8 h-8 rounded-xl bg-[#EFF8F3] flex items-center justify-center border border-[#D2E8DB]">
+                      <FileCheck2 className="w-4 h-4 text-[#2E7D5B]" />
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold tracking-tight leading-none">0.18s Latency</p>
-                      <p className="text-indigo-200 text-[10px] font-semibold mt-0.5">Deterministic Core</p>
+                      <p className="text-[#202923] text-xs font-bold tracking-tight leading-none">CredentialCheck</p>
+                      <p className="text-[#556058] text-[10px] font-semibold mt-0.5">Statutory Registry Corroborated</p>
                     </div>
                   </div>
 
                   {/* Badge 3: Bottom Left - Trust Score: 98/100 */}
                   <div className="floating-badge absolute bottom-2 sm:bottom-6 left-1 sm:left-3 floating-ui-badge rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 z-30 pointer-events-auto">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-400/40 text-emerald-400 font-mono font-bold text-xs shadow-inner">
+                    <div className="w-8 h-8 rounded-xl bg-[#EFF8F3] flex items-center justify-center border border-[#D2E8DB] text-[#2E7D5B] font-mono font-bold text-xs">
                       <span className="counter-val">98</span>
                     </div>
                     <div>
-                      <p className="text-white text-xs font-bold tracking-tight leading-none">Trust Score: 98/100</p>
-                      <p className="text-slate-400 text-[10px] font-medium mt-0.5">Low Risk Verified</p>
+                      <p className="text-[#202923] text-xs font-bold tracking-tight leading-none">Trust Score: 98/100</p>
+                      <p className="text-[#556058] text-[10px] font-medium mt-0.5">Evidence Ledger Verified</p>
                     </div>
                   </div>
 
@@ -460,22 +469,22 @@ export function CinematicHero({
               </div>
             </div>
 
-            {/* 3. RIGHT: MINIMAL BRANDING & LIVE TELEMETRY PILL (Desktop Col 10-12) */}
+            {/* 3. RIGHT: BRANDING & LIVE TELEMETRY PILL */}
             <div className="card-right-text gsap-reveal order-1 lg:order-3 lg:col-span-3 flex justify-center lg:justify-end z-20 w-full">
               <div className="flex flex-col items-center lg:items-end text-center lg:text-right gap-2.5">
-                <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Real-time Sentinel</span>
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-[#2E7D5B] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#49B99A] animate-pulse" />
+                  <span>Real-Time Telemetry</span>
                 </span>
                 
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter text-card-silver-matte leading-none">
-                  VERIFY<span className="text-indigo-400">ME</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter text-[#202923] leading-none">
+                  VERIFY<span className="text-[#49B99A]">ME</span>
                 </h2>
 
-                <div className="p-2 px-3 rounded-xl bg-slate-900/60 border border-white/5 backdrop-blur-md flex items-center gap-2.5 mt-1">
-                  <Activity className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-[10px] font-mono text-slate-300 font-semibold tracking-wider">
-                    99.8% TRUST ACCURACY
+                <div className="p-2 px-3 rounded-xl bg-[#FFFFFF] border border-[#E7EEE9] shadow-sm flex items-center gap-2.5 mt-1">
+                  <Activity className="w-3.5 h-3.5 text-[#49B99A]" />
+                  <span className="text-[10px] font-mono text-[#556058] font-semibold tracking-wider">
+                    99.8% AUDIT ACCURACY
                   </span>
                 </div>
               </div>

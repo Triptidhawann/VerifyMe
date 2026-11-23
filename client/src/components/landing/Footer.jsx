@@ -10,36 +10,36 @@ const GithubIcon = ({ className }) => (
 
 const Footer = () => {
   return (
-    <footer className="saas-footer relative overflow-hidden">
+    <footer className="relative overflow-hidden bg-[#FAFCFA] border-t border-[#E7EEE9] pt-20 pb-10">
       {/* Top Border Subtle Gradient Line */}
       <div 
         className="absolute top-0 left-0 right-0 h-[1px]"
         style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.3) 30%, rgba(6, 182, 212, 0.3) 70%, transparent 100%)'
+          background: 'linear-gradient(90deg, transparent 0%, rgba(73, 185, 154, 0.4) 30%, rgba(46, 125, 91, 0.4) 70%, transparent 100%)'
         }}
       />
 
       <div className="container relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
         {/* Main 4-Column Balanced Grid */}
-        <div className="footer-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 mb-14">
           {/* Brand Column */}
-          <div className="footer-col brand-col">
-            <Link to="/" className="inline-flex items-center gap-2.5 text-2xl font-bold tracking-tight text-white mb-3.5 hover:opacity-90 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+          <div className="lg:col-span-5">
+            <Link to="/" className="inline-flex items-center gap-2.5 text-2xl font-bold tracking-tight text-[#202923] mb-3.5 hover:opacity-90 transition-opacity">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2E7D5B] to-[#49B99A] flex items-center justify-center text-white shadow-md shadow-[#49B99A]/20">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <span>Verify<span className="text-indigo-400">Me</span></span>
+              <span>Verify<span className="text-[#49B99A]">Me</span></span>
             </Link>
 
-            <p className="text-slate-400 text-sm leading-relaxed mb-5 max-w-sm font-normal">
-              The autonomous digital trust platform. Authenticate unknown phone numbers, sender email domains, and website destinations using empirical signal intelligence before you engage.
+            <p className="text-[#737D76] text-sm leading-relaxed mb-5 max-w-sm font-normal">
+              The autonomous digital trust platform. Authenticate unknown phone numbers, sender email domains, website destinations, job offers, and credentials using empirical signal intelligence before you engage.
             </p>
 
             {/* Live Operational Status Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono mb-5 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EFF8F3] border border-[#D2E8DB] text-[#2E7D5B] text-xs font-mono mb-5 shadow-sm">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#49B99A] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#49B99A]"></span>
               </span>
               <span>Zero-Trust Systems Active • &lt; 0.18s</span>
             </div>
@@ -49,36 +49,45 @@ const Footer = () => {
                 href="https://github.com/Triptidhawann/VerifyMe" 
                 target="_blank" 
                 rel="noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 hover:border-indigo-500/50 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all"
+                className="w-8 h-8 rounded-lg bg-white border border-[#E7EEE9] hover:border-[#49B99A] text-[#737D76] hover:text-[#2E7D5B] flex items-center justify-center transition-all shadow-sm"
                 title="GitHub Repository"
               >
                 <GithubIcon className="w-4 h-4" />
               </a>
-              <div className="text-xs font-mono text-slate-400 flex items-center gap-1.5 pl-1">
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="text-xs font-mono text-[#737D76] flex items-center gap-1.5 pl-1">
+                <Lock className="w-3.5 h-3.5 text-[#2E7D5B]" />
                 <span>256-Bit TLS Verified</span>
               </div>
             </div>
           </div>
 
           {/* Column 1: Verification Engine */}
-          <div className="footer-col">
-            <h4>Verification Engine</h4>
-            <ul className="footer-links">
+          <div className="lg:col-span-3">
+            <h4 className="text-sm font-bold text-[#202923] mb-4 uppercase tracking-wider font-mono">Verification Engine</h4>
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <a href="#how-it-works">Phone Carrier Match</a>
+                <Link to="/jobshield" className="text-[#737D76] hover:text-[#2E7D5B] flex items-center gap-1.5 transition-colors">
+                  <span>JobShield (Offer Scams)</span>
+                  <span className="text-[10px] bg-[#EFF8F3] text-[#2E7D5B] font-mono px-1.5 py-0.5 rounded border border-[#D2E8DB]">NEW</span>
+                </Link>
               </li>
               <li>
-                <a href="#how-it-works">Authoritative MX & SPF</a>
+                <Link to="/credential-check" className="text-[#737D76] hover:text-[#2E7D5B] flex items-center gap-1.5 transition-colors">
+                  <span>CredentialCheck (Degrees & Marksheets)</span>
+                  <span className="text-[10px] bg-[#EFF8F3] text-[#2E7D5B] font-mono px-1.5 py-0.5 rounded border border-[#D2E8DB]">NEW</span>
+                </Link>
               </li>
               <li>
-                <a href="#how-it-works">URL Phishing Defense</a>
+                <a href="#how-it-works" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Phone Carrier Invariance</a>
               </li>
               <li>
-                <a href="#how-it-works">Groq Threat Synthesis</a>
+                <a href="#how-it-works" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Authoritative MX & SPF Checks</a>
               </li>
               <li>
-                <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium">
+                <a href="#how-it-works" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">URL Homoglyph Phishing Defense</a>
+              </li>
+              <li>
+                <Link to="/signup" className="text-[#2E7D5B] hover:text-[#174C3C] flex items-center gap-1 font-semibold pt-1">
                   <span>Start Live Scan</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
@@ -87,62 +96,62 @@ const Footer = () => {
           </div>
 
           {/* Column 2: Security & Trust */}
-          <div className="footer-col">
-            <h4>Security & Trust</h4>
-            <ul className="footer-links">
+          <div className="lg:col-span-2">
+            <h4 className="text-sm font-bold text-[#202923] mb-4 uppercase tracking-wider font-mono">Security & Trust</h4>
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <a href="#why">Zero-Knowledge Model</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Evidence Ledger</a>
               </li>
               <li>
-                <a href="#why">Deterministic Pipeline</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Deterministic Pipeline</a>
               </li>
               <li>
-                <a href="#why">Cryptographic Hashing</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">PKCS#7 Verification</a>
               </li>
               <li>
-                <a href="#why">Zero Search Logging</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Zero Search Logging</a>
               </li>
               <li>
-                <a href="#why">SOC-2 Compliance</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Privacy by Design</a>
               </li>
             </ul>
           </div>
 
           {/* Column 3: Platform Access */}
-          <div className="footer-col">
-            <h4>Platform Access</h4>
-            <ul className="footer-links">
+          <div className="lg:col-span-2">
+            <h4 className="text-sm font-bold text-[#202923] mb-4 uppercase tracking-wider font-mono">Platform Access</h4>
+            <ul className="space-y-2.5 text-sm">
               <li>
-                <Link to="/login">Investigator Sign In</Link>
+                <Link to="/login" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Investigator Sign In</Link>
               </li>
               <li>
-                <Link to="/signup">Create Workspace</Link>
+                <Link to="/signup" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Create Workspace</Link>
               </li>
               <li>
-                <a href="#problem">Threat Vectors</a>
+                <a href="#problem" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Threat Vectors</a>
               </li>
               <li>
-                <a href="#how-it-works">Interactive Demo</a>
+                <a href="#how-it-works" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">How It Works</a>
               </li>
               <li>
-                <a href="#why">Product Principles</a>
+                <a href="#why" className="text-[#737D76] hover:text-[#2E7D5B] transition-colors">Product Principles</a>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="footer-bottom">
+        <div className="border-t border-[#E7EEE9] pt-6 text-xs text-[#737D76] flex flex-wrap justify-between items-center gap-4">
           <div>
             &copy; {new Date().getFullYear()} VerifyMe Platform Inc. All rights reserved.
           </div>
 
           <div className="flex flex-wrap items-center gap-5">
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="text-slate-700">•</span>
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Terms of Service</span>
-            <span className="text-slate-700">•</span>
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Security Disclosures</span>
+            <span className="hover:text-[#202923] cursor-pointer transition-colors">Privacy Policy</span>
+            <span className="text-[#D2E8DB]">•</span>
+            <span className="hover:text-[#202923] cursor-pointer transition-colors">Terms of Service</span>
+            <span className="text-[#D2E8DB]">•</span>
+            <span className="hover:text-[#202923] cursor-pointer transition-colors">Security Disclosures</span>
           </div>
         </div>
       </div>

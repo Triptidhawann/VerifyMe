@@ -24,7 +24,7 @@ const Home = () => {
   }
 
   return (
-    <div className="landing-page-root bg-[#030712] min-h-screen text-slate-100 overflow-x-hidden">
+    <div className="landing-page-root bg-[#FAFCFA] min-h-screen text-[#202923] overflow-x-hidden">
       <Navbar />
       <CinematicHero />
       <div id="problem">

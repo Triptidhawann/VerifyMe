@@ -97,7 +97,7 @@ const Hero = () => {
           {/* The 3D Robot Image & Floor Shadow */}
           <div className="ai-robot-wrapper full-size">
             <img 
-              src="/robot-assistant.jpg" 
+              src="/robot-assistant.png" 
               alt="VerifyMe AI Verification Robot" 
               className="ai-robot-image" 
             />
